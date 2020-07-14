@@ -30,7 +30,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public BigInteger BalanceOf(UInt160 scriptHash, UInt160 account)
         {
-            BigInteger balance = TestInvoke(scriptHash, "balanceOf", account).Stack.Single().ToStackItem().GetBigInteger();
+            BigInteger balance = TestInvoke(scriptHash, "balanceOf", account).Stack.Single().ToStackItem().GetInteger();
             return balance;
         }
 
@@ -61,7 +61,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public byte Decimals(UInt160 scriptHash)
         {
-            return (byte)TestInvoke(scriptHash, "decimals").Stack.Single().ToStackItem().GetBigInteger();
+            return (byte)TestInvoke(scriptHash, "decimals").Stack.Single().ToStackItem().GetInteger();
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public BigInteger TotalSupply(UInt160 scriptHash)
         {
-            return TestInvoke(scriptHash, "totalSupply").Stack.Single().ToStackItem().GetBigInteger();
+            return TestInvoke(scriptHash, "totalSupply").Stack.Single().ToStackItem().GetInteger();
         }
 
         /// <summary>
@@ -92,8 +92,8 @@ namespace Neo.Network.RPC
             {
                 Name = result[0].ToStackItem().GetString(),
                 Symbol = result[1].ToStackItem().GetString(),
-                Decimals = (byte)result[2].ToStackItem().GetBigInteger(),
-                TotalSupply = result[3].ToStackItem().GetBigInteger()
+                Decimals = (byte)result[2].ToStackItem().GetInteger(),
+                TotalSupply = result[3].ToStackItem().GetInteger()
             };
         }
 
@@ -112,7 +112,7 @@ namespace Neo.Network.RPC
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
             Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, cosigners)
+                .MakeTransaction(script, cosigners)
                 .AddSignature(fromKey)
                 .Sign()
                 .Tx;
@@ -139,7 +139,7 @@ namespace Neo.Network.RPC
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
             Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, cosigners)
+                .MakeTransaction(script, cosigners)
                 .AddMultiSig(fromKeys, m, pubKeys)
                 .Sign()
                 .Tx;
