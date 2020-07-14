@@ -1,0 +1,420 @@
+{
+  "category": "Splice",
+  "name": "CAT",
+  "tests": [
+    {
+      "name": "Max Item Length",
+      "script": [
+        "PUSH1",
+        "PUSHDATA4",
+        "0x00001000",
+        "PUSH0*1048576",
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto",
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "FAULT"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wrong type [Map,ByteString]",
+      "script": [
+        "PUSH0",
+        "NEWMAP",
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto",
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "FAULT"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wrong type [ByteString,Map]",
+      "script": [
+        "NEWMAP",
+        "PUSH0",
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto",
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "FAULT"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wrong push",
+      "script": [
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto"
+          ],
+          "result": {
+            "state": "FAULT"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Real test",
+      "script": [
+        "PUSHDATA1",
+        "0x01",
+        "0x01",
+        "PUSHDATA1",
+        "0x02",
+        "0x0203",
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto",
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "BREAK",
+            "invocationStack": [
+              {
+                "instructionPointer": 8,
+                "nextInstruction": "RET",
+                "evaluationStack": [
+                  {
+                    "type": "Buffer",
+                    "value": "0x010203"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "actions": [
+            "stepInto"
+          ],
+          "result": {
+            "state": "HALT",
+            "resultStack": [
+              {
+                "type": "Buffer",
+                "value": "0x010203"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CAT int(0) with empty ByteString",
+      "script": [
+        "PUSH1",
+        "DEC",
+        "PUSH0",
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto",
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "BREAK",
+            "invocationStack": [
+              {
+                "instructionPointer": 3,
+                "nextInstruction": "CAT",
+                "evaluationStack": [
+                  {
+                    "type": "integer",
+                    "value": 0
+                  },
+                  {
+                    "type": "integer",
+                    "value": 0
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "actions": [
+            "execute"
+          ],
+          "result": {
+            "state": "HALT",
+            "resultStack": [
+              {
+                "type": "Buffer",
+                "value": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CAT 0x01 with empty ByteString",
+      "script": [
+        "PUSH1",
+        "PUSH0",
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "BREAK",
+            "invocationStack": [
+              {
+                "instructionPointer": 2,
+                "nextInstruction": "CAT",
+                "evaluationStack": [
+                  {
+                    "type": "integer",
+                    "value": 0
+                  },
+                  {
+                    "type": "integer",
+                    "value": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "actions": [
+            "execute"
+          ],
+          "result": {
+            "state": "HALT",
+            "resultStack": [
+              {
+                "type": "Buffer",
+                "value": "0x01"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CAT empty ByteString with 0x01",
+      "script": [
+        "PUSH0",
+        "PUSH1",
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "BREAK",
+            "invocationStack": [
+              {
+                "instructionPointer": 2,
+                "nextInstruction": "CAT",
+                "evaluationStack": [
+                  {
+                    "type": "integer",
+                    "value": 1
+                  },
+                  {
+                    "type": "integer",
+                    "value": 0
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "actions": [
+            "execute"
+          ],
+          "result": {
+            "state": "HALT",
+            "resultStack": [
+              {
+                "type": "Buffer",
+                "value": "0x01"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CAT Buffers",
+      "script": [
+        "PUSHDATA1",
+        "01AA",
+        "CONVERT",
+        "0x30",
+        "PUSHDATA1",
+        "01BB",
+        "CONVERT",
+        "0x30",
+        "INITSLOT",
+        "0002",
+        "LDARG1",
+        "LDARG0",
+        "CAT"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto",
+            "stepInto",
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "BREAK",
+            "invocationStack": [
+              {
+                "instructionPointer": 10,
+                "nextInstruction": "INITSLOT",
+                "evaluationStack": [
+                  {
+                    "type": "Buffer",
+                    "value": "BB"
+                  },
+                  {
+                    "type": "Buffer",
+                    "value": "AA"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "actions": [
+            "stepInto"
+          ],
+          "result": {
+            "state": "BREAK",
+            "invocationStack": [
+              {
+                "instructionPointer": 13,
+                "nextInstruction": "LDARG1",
+                "arguments": [
+                  {
+                    "type": "Buffer",
+                    "value": "BB"
+                  },
+                  {
+                    "type": "Buffer",
+                    "value": "AA"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "actions": [
+            "stepInto",
+            "stepInto"
+          ],
+          "result": {
+            "state": "BREAK",
+            "invocationStack": [
+              {
+                "instructionPointer": 15,
+                "nextInstruction": "CAT",
+                "evaluationStack": [
+                  {
+                    "type": "Buffer",
+                    "value": "BB"
+                  },
+                  {
+                    "type": "Buffer",
+                    "value": "AA"
+                  }
+                ],
+                "arguments": [
+                  {
+                    "type": "Buffer",
+                    "value": "BB"
+                  },
+                  {
+                    "type": "Buffer",
+                    "value": "AA"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "actions": [
+            "stepInto"
+          ],
+          "result": {
+            "state": "BREAK",
+            "invocationStack": [
+              {
+                "instructionPointer": 16,
+                "nextInstruction": "RET",
+                "evaluationStack": [
+                  {
+                    "type": "Buffer",
+                    "value": "AABB"
+                  }
+                ],
+                "arguments": [
+                  {
+                    "type": "Buffer",
+                    "value": "BB"
+                  },
+                  {
+                    "type": "Buffer",
+                    "value": "AA"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+
+      ]
+    }
+  ]
+}

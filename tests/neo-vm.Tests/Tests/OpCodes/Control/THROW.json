@@ -1,0 +1,21 @@
+﻿{
+  "category": "Control",
+  "name": "THROW",
+  "tests": [
+    {
+      "script": [
+        "THROW"
+      ],
+      "steps": [
+        {
+          "actions": [
+            "stepInto"
+          ],
+          "result": {
+            "state": "FAULT"
+          }
+        }
+      ]
+    }
+  ]
+}
