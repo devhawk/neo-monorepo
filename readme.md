@@ -11,4 +11,9 @@ git subtree add --prefix core official-core v3.0.0-preview2 --squash
 git subtree add --prefix modules official-modules v3.0.0-preview2 --squash
 git subtree add --prefix devpack official-devpack v3.0.0-preview2 --squash
 
+git subtree pull --prefix vm official-vm master --squash
+git subtree pull --prefix core official-core master --squash
+git subtree pull --prefix modules official-modules master --squash
+git subtree pull --prefix devpack official-devpack master --squash
+
 ```
