@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Copyright>2015-2020 The Neo Project</Copyright>
+    <AssemblyTitle>Neo.Compiler.MSIL</AssemblyTitle>
+    <Version>3.0.0-preview2</Version>
+    <Authors>The Neo Project</Authors>
+    <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>neon</AssemblyName>
+    <PackageId>Neo.Compiler.MSIL</PackageId>
+    <PackageTags>NEO;Blockchain;Smart Contract;Compiler</PackageTags>
+    <PackageProjectUrl>https://github.com/neo-project/neo-devpack-dotnet</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/neo-project/neo-devpack-dotnet.git</RepositoryUrl>
+    <RootNamespace>Neo.Compiler</RootNamespace>
+    <Company>The Neo Project</Company>
+    <Product>Neo.Compiler.MSIL</Product>
+    <Description>Neo.Compiler.MSIL</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.7.82" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="3.4.0" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.1" />
+    <PackageReference Include="Neo" Version="3.0.0-preview2-00" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neo.SmartContract.Framework\Neo.SmartContract.Framework.csproj" />
+  </ItemGroup>
+</Project>
