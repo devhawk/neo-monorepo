@@ -8,6 +8,11 @@ namespace Neo.SmartContract.Framework.Services.Neo
         public readonly byte[] Script;
 
         /// <summary>
+        /// Manifest
+        /// </summary>
+        public readonly string Manifest;
+
+        /// <summary>
         /// Has storage
         /// </summary>
         public readonly bool HasStorage;
@@ -32,7 +37,10 @@ namespace Neo.SmartContract.Framework.Services.Neo
         [Syscall("System.Contract.Destroy")]
         public static extern void Destroy();
 
+        [Syscall("System.Contract.GetCallFlags")]
+        public static extern byte GetCallFlags();
+
         [Syscall("System.Contract.CreateStandardAccount")]
-        public static extern byte[] CreateStandardAccount(byte[] script);
+        public static extern byte[] CreateStandardAccount(byte[] pubKey);
     }
 }
