@@ -1,3 +1,4 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Test.Extensions;
 using Neo.Test.Types;
 using Neo.VM;
@@ -20,6 +21,8 @@ namespace Neo.Test
         {
             foreach (var test in ut.Tests)
             {
+                Assert.IsFalse(string.IsNullOrEmpty(test.Name), "Name is required");
+
                 using (var engine = new TestEngine())
                 {
                     Debugger debugger = new Debugger(engine);
@@ -171,6 +174,7 @@ namespace Neo.Test
                 case VMUTStackItemType.Buffer:
                     {
                         var value = ret["value"].Value<string>();
+                        Assert.IsTrue(string.IsNullOrEmpty(value) || value.StartsWith("0x"), $"'0x' prefix required for value: '{value}'");
                         ret["value"] = value.FromHexString();
                         break;
                     }
@@ -235,9 +239,9 @@ namespace Neo.Test
                             ["value"] = p.Position
                         };
                     }
-                case VM.Types.Boolean v: value = new JValue(v.ToBoolean()); break;
-                case VM.Types.Integer v: value = new JValue(v.ToBigInteger().ToString()); break;
-                case VM.Types.ByteString v: value = new JValue(v.Span.ToArray()); break;
+                case VM.Types.Boolean v: value = new JValue(v.GetBoolean()); break;
+                case VM.Types.Integer v: value = new JValue(v.GetInteger().ToString()); break;
+                case VM.Types.ByteString v: value = new JValue(v.GetSpan().ToArray()); break;
                 case VM.Types.Buffer v: value = new JValue(v.InnerBuffer); break;
                 //case VM.Types.Struct v:
                 case VM.Types.Array v:
@@ -258,7 +262,7 @@ namespace Neo.Test
 
                         foreach (var entry in v)
                         {
-                            jdic.Add(entry.Key.Span.ToArray().ToHexString(), ItemToJson(entry.Value));
+                            jdic.Add(entry.Key.GetSpan().ToArray().ToHexString(), ItemToJson(entry.Value));
                         }
 
                         value = jdic;

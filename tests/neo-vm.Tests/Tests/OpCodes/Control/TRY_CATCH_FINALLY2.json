@@ -1,31 +1,28 @@
 {
-  "category": "Limits",
-  "name": "Invocation limits",
+  "category": "Control",
+  "name": "TRY_CATCH_FINALLY",
   "tests": [
     {
-      "name": "More than 1024 ExecutionContext",
+      "name": "try catch finally with exception",
       "script": [
-        "INITSSLOT",
-        "0x01",
-        "PUSHDATA1",
+        "TRY",
+        "0x080C",
+        "PUSH0",
+        "THROW",
+        "ENDTRY",
+        "0x06",
+        "RET",
+        "PUSH1",
+        "ENDTRY",
         "0x02",
-        "0x0004",
-        "INC",
-        "STSFLD0",
-        "LDSFLD0",
-        "DEC",
-        "DUP",
-        "STSFLD0",
-        "JMPIFNOT",
-        "0x04",
-        "CALL",
-        "0xfa",
-        "RET"
+        "RET",
+        "PUSH2",
+        "ENDFINALLY",
+        "PUSH3"
       ],
       "steps": [
         {
           "actions": [
-            "stepInto",
             "stepInto",
             "stepInto",
             "stepInto"
@@ -35,11 +32,11 @@
             "invocationStack": [
               {
                 "instructionPointer": 8,
-                "nextInstruction": "LDSFLD0",
-                "staticFields": [
+                "nextInstruction": "PUSH1",
+                "evaluationStack": [
                   {
                     "type": "integer",
-                    "value": 1025
+                    "value": 0
                   }
                 ]
               }
@@ -48,8 +45,6 @@
         },
         {
           "actions": [
-            "stepInto",
-            "stepInto",
             "stepInto",
             "stepInto"
           ],
@@ -58,17 +53,15 @@
             "invocationStack": [
               {
                 "instructionPointer": 12,
-                "nextInstruction": "JMPIFNOT",
+                "nextInstruction": "PUSH2",
                 "evaluationStack": [
                   {
                     "type": "integer",
-                    "value": 1024
-                  }
-                ],
-                "staticFields": [
+                    "value": 1
+                  },
                   {
                     "type": "integer",
-                    "value": 1024
+                    "value": 0
                   }
                 ]
               }
@@ -84,34 +77,24 @@
             "state": "BREAK",
             "invocationStack": [
               {
-                "instructionPointer": 8,
-                "nextInstruction": "LDSFLD0",
-                "staticFields": [
-                  {
-                    "type": "integer",
-                    "value": 1024
-                  }
-                ]
-              },
-              {
-                "instructionPointer": 16,
+                "instructionPointer": 11,
                 "nextInstruction": "RET",
-                "staticFields": [
+                "evaluationStack": [
                   {
                     "type": "integer",
-                    "value": 1024
+                    "value": 2
+                  },
+                  {
+                    "type": "integer",
+                    "value": 1
+                  },
+                  {
+                    "type": "integer",
+                    "value": 0
                   }
                 ]
               }
             ]
-          }
-        },
-        {
-          "actions": [
-            "execute"
-          ],
-          "result": {
-            "state": "FAULT"
           }
         }
       ]
