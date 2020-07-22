@@ -316,12 +316,12 @@ namespace Neo.Network.RPC
         /// Returns the result after calling a smart contract at scripthash with the given operation and parameters.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks, params UInt160[] scriptHashesForVerifying)
+        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signer)
         {
             List<JObject> parameters = new List<JObject> { scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray() };
-            if (scriptHashesForVerifying.Length > 0)
+            if (signer.Length > 0)
             {
-                parameters.Add(scriptHashesForVerifying.Select(p => (JObject)p.ToString()).ToArray());
+                parameters.Add(signer.Select(p => (JObject)p.ToJson()).ToArray());
             }
             return RpcInvokeResult.FromJson(RpcSend("invokefunction", parameters.ToArray()));
         }
@@ -330,14 +330,19 @@ namespace Neo.Network.RPC
         /// Returns the result after passing a script through the VM.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public RpcInvokeResult InvokeScript(byte[] script, params UInt160[] scriptHashesForVerifying)
+        public RpcInvokeResult InvokeScript(byte[] script, params Signer[] signers)
         {
             List<JObject> parameters = new List<JObject> { script.ToHexString() };
-            if (scriptHashesForVerifying.Length > 0)
+            if (signers.Length > 0)
             {
-                parameters.Add(scriptHashesForVerifying.Select(p => (JObject)p.ToString()).ToArray());
+                parameters.Add(signers.Select(p => p.ToJson()).ToArray());
             }
             return RpcInvokeResult.FromJson(RpcSend("invokescript", parameters.ToArray()));
+        }
+
+        public RpcUnclaimedGas GetUnclaimedGas(string address)
+        {
+            return RpcUnclaimedGas.FromJson(RpcSend("getunclaimedgas", address));
         }
 
         #endregion SmartContract
@@ -381,18 +386,6 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
-        /// This method applies to assets that conform to NEP-5 standards.
-        /// </summary>
-        /// <returns>new address as string</returns>
-        public BigDecimal GetBalance(string assetId)
-        {
-            byte decimals = new Nep5API(this).Decimals(UInt160.Parse(assetId));
-            BigInteger balance = BigInteger.Parse(RpcSend("getbalance", assetId)["balance"].AsString());
-            return new BigDecimal(balance, decimals);
-        }
-
-        /// <summary>
         /// Creates a new account in the wallet opened by RPC.
         /// </summary>
         public string GetNewAddress()
@@ -401,11 +394,23 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
+        /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
+        /// This method applies to assets that conform to NEP-5 standards.
+        /// </summary>
+        /// <returns>new address as string</returns>
+        public BigDecimal GetWalletBalance(string assetId)
+        {
+            byte decimals = new Nep5API(this).Decimals(UInt160.Parse(assetId));
+            BigInteger balance = BigInteger.Parse(RpcSend("getwalletbalance", assetId)["balance"].AsString());
+            return new BigDecimal(balance, decimals);
+        }
+
+        /// <summary>
         /// Gets the amount of unclaimed GAS in the wallet.
         /// </summary>
-        public BigInteger GetUnclaimedGas()
+        public BigInteger GetWalletUnclaimedGas()
         {
-            return BigInteger.Parse(RpcSend("getunclaimedgas").AsString());
+            return BigInteger.Parse(RpcSend("getwalletunclaimedgas").AsString());
         }
 
         /// <summary>
@@ -467,7 +472,7 @@ namespace Neo.Network.RPC
             return RpcSend("sendtoaddress", assetId, address, amount);
         }
 
-        #endregion Utilities
+        #endregion Wallet
 
         #region Plugins
 

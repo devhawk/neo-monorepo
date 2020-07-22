@@ -2,8 +2,10 @@ using Neo.Persistence;
 
 namespace Neo.Plugins.Storage
 {
-    public class RocksDBStore : Plugin, IStoragePlugin
+    public class RocksDBStore : Plugin, IStorageProvider
     {
+        public override string Description => "Uses RocksDBStore to store the blockchain data";
+
         /// <summary>
         /// Configure
         /// </summary>
