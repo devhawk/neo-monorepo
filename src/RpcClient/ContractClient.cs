@@ -48,13 +48,14 @@ namespace Neo.Network.RPC
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(InteropService.Contract.Create, contractScript, manifest.ToString());
+                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, contractScript, manifest.ToString());
                 script = sb.ToArray();
             }
-
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
-            Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, null)
+            Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
+
+            Transaction tx = new TransactionManager(rpcClient)
+                .MakeTransaction(script, signers)
                 .AddSignature(key)
                 .Sign()
                 .Tx;

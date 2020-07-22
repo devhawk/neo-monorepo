@@ -5,6 +5,8 @@ namespace Neo.Plugins
     public sealed class RpcServerPlugin : Plugin
     {
         static List<object> handlers = new List<object>();
+        public override string Name => "RpcServer";
+        public override string Description => "Enables RPC for the node";
         RpcServer server;
         RpcServerSettings settings;
 
@@ -46,17 +48,6 @@ namespace Neo.Plugins
 
         public static void RegisterMethods(object handler)
         {
-            // if RpcServerPlugin is already loaded, call RegisterMethods directly
-            foreach (var plugin in Plugin.Plugins)
-            {
-                if (plugin is RpcServerPlugin rpcServerPlugin)
-                {
-                    rpcServerPlugin.server.RegisterMethods(handler);
-                    return;
-                }
-            }
-
-            // otherwise, save the handler for use during RpcServerPlugin load
             handlers.Add(handler);
         }
     }

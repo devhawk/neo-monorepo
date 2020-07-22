@@ -48,16 +48,6 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetBalance(JArray _params)
-        {
-            CheckWallet();
-            UInt160 asset_id = UInt160.Parse(_params[0].AsString());
-            JObject json = new JObject();
-            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
-            return json;
-        }
-
-        [RpcMethod]
         private JObject GetNewAddress(JArray _params)
         {
             CheckWallet();
@@ -68,7 +58,17 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetUnclaimedGas(JArray _params)
+        private JObject GetWalletBalance(JArray _params)
+        {
+            CheckWallet();
+            UInt160 asset_id = UInt160.Parse(_params[0].AsString());
+            JObject json = new JObject();
+            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
+            return json;
+        }
+
+        [RpcMethod]
+        private JObject GetWalletUnclaimedGas(JArray _params)
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
@@ -138,19 +138,25 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void ProcessInvokeWithWallet(JObject result)
+        private void ProcessInvokeWithWallet(JObject result, Signers signers = null)
         {
-            if (wallet != null)
+            Transaction tx = null;
+            if (wallet != null && signers != null)
             {
-                Transaction tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes());
-                ContractParametersContext context = new ContractParametersContext(tx);
-                wallet.Sign(context);
-                if (context.Completed)
-                    tx.Witnesses = context.GetWitnesses();
-                else
-                    tx = null;
-                result["tx"] = tx?.ToArray().ToHexString();
+                UInt160[] accounts = wallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash).ToArray();
+                Signer[] witnessCosigners = signers.GetSigners().Where(p => accounts.Contains(p.Account)).ToArray();
+                if (witnessCosigners.Count() > 0)
+                {
+                    tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), null, witnessCosigners);
+                    ContractParametersContext context = new ContractParametersContext(tx);
+                    wallet.Sign(context);
+                    if (context.Completed)
+                        tx.Witnesses = context.GetWitnesses();
+                    else
+                        tx = null;
+                }
             }
+            result["tx"] = tx?.ToArray().ToHexString();
         }
 
         [RpcMethod]
@@ -285,7 +291,7 @@ namespace Neo.Plugins
             if (context.Completed)
             {
                 tx.Witnesses = context.GetWitnesses();
-                system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
+                system.Blockchain.Tell(tx);
                 return tx.ToJson();
             }
             else

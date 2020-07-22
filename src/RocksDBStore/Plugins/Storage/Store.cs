@@ -1,3 +1,4 @@
+using Neo.IO.Caching;
 using Neo.Persistence;
 using RocksDbSharp;
 using System;
@@ -81,17 +82,15 @@ namespace Neo.Plugins.Storage
             return new Snapshot(this, db);
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)
         {
             using var it = db.NewIterator(GetFamily(table), Options.ReadDefault);
-            for (it.Seek(prefix); it.Valid(); it.Next())
-            {
-                var key = it.Key();
-                byte[] y = prefix;
-                if (key.Length < y.Length) break;
-                if (!key.AsSpan().StartsWith(y)) break;
-                yield return (key, it.Value());
-            }
+            if (direction == SeekDirection.Forward)
+                for (it.Seek(keyOrPrefix); it.Valid(); it.Next())
+                    yield return (it.Key(), it.Value());
+            else
+                for (it.SeekForPrev(keyOrPrefix); it.Valid(); it.Prev())
+                    yield return (it.Key(), it.Value());
         }
 
         public byte[] TryGet(byte table, byte[] key)
