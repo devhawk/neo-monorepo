@@ -24,19 +24,14 @@ namespace Neo.Compiler.MSIL.TestClasses
             return Runtime.Platform;
         }
 
-        public static TriggerType GetTrigger()
+        public static byte GetTrigger()
         {
-            return Runtime.Trigger;
+            return (byte)Runtime.Trigger;
         }
 
         public static void Log(string message)
         {
             Runtime.Log(message);
-        }
-
-        public static void Notify(string message)
-        {
-            Runtime.Notify(message);
         }
 
         public static bool CheckWitness(byte[] hashOrPubkey)
@@ -58,7 +53,7 @@ namespace Neo.Compiler.MSIL.TestClasses
             for (int x = 0; x < notifications.Length; x++)
             {
                 var notify = notifications[x];
-                sum += (int)notify.State;
+                sum += (int)notify.State[0];
             }
 
             return sum;
@@ -80,7 +75,7 @@ namespace Neo.Compiler.MSIL.TestClasses
                     if (notify.ScriptHash[y] != hash[y]) return int.MinValue;
                 }
 
-                sum += (int)notify.State;
+                sum += (int)notify.State[0];
             }
 
             return sum;

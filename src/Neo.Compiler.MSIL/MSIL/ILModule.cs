@@ -1,3 +1,4 @@
+using Mono.Cecil;
 using System;
 using System.Collections.Generic;
 
@@ -99,16 +100,16 @@ namespace Neo.Compiler.MSIL
     public class ILField
     {
         public bool isEvent = false;
-        public string type;
+        public TypeReference type;
         public string name;
         public string displayName;
-        public string returntype;
+        public TypeReference returntype;
         public List<NeoParam> paramtypes = new List<NeoParam>();
-        public Mono.Cecil.FieldDefinition field;
+        public FieldDefinition field;
 
-        public ILField(ILType type, Mono.Cecil.FieldDefinition field)
+        public ILField(ILType type, FieldDefinition field)
         {
-            this.type = field.FieldType.FullName;
+            this.type = field.FieldType;
             this.name = field.Name;
             this.displayName = this.name;
             this.field = field;
@@ -117,7 +118,7 @@ namespace Neo.Compiler.MSIL
                 if (ev.Name == field.Name && ev.EventType.FullName == field.FieldType.FullName)
                 {
                     this.isEvent = true;
-                    Mono.Collections.Generic.Collection<Mono.Cecil.CustomAttribute> ca = ev.CustomAttributes;
+                    Mono.Collections.Generic.Collection<CustomAttribute> ca = ev.CustomAttributes;
                     foreach (var attr in ca)
                     {
                         if (attr.AttributeType.Name == "DisplayNameAttribute")
@@ -125,7 +126,7 @@ namespace Neo.Compiler.MSIL
                             this.displayName = (string)attr.ConstructorArguments[0].Value;
                         }
                     }
-                    if (!(field.FieldType is Mono.Cecil.TypeDefinition eventtype))
+                    if (!(field.FieldType is TypeDefinition eventtype))
                     {
                         try
                         {
@@ -142,47 +143,21 @@ namespace Neo.Compiler.MSIL
                         {
                             if (m.Name == "Invoke")
                             {
-                                this.returntype = m.ReturnType.FullName;
-                                try
-                                {
-                                    var _type = m.ReturnType.Resolve();
-                                    foreach (var i in _type.Interfaces)
-                                    {
-                                        if (i.InterfaceType.Name == "IApiInterface")
-                                        {
-                                            this.returntype = "IInteropInterface";
-                                        }
-                                    }
-                                }
-                                catch
-                                {
-                                }
+                                this.returntype = m.ReturnType;
                                 foreach (var src in m.Parameters)
                                 {
-                                    string paramtype = src.ParameterType.FullName;
                                     if (src.ParameterType.IsGenericParameter)
                                     {
-                                        var gtype = src.ParameterType as Mono.Cecil.GenericParameter;
+                                        var gtype = src.ParameterType as GenericParameter;
 
-                                        var srcgtype = field.FieldType as Mono.Cecil.GenericInstanceType;
+                                        var srcgtype = field.FieldType as GenericInstanceType;
                                         var rtype = srcgtype.GenericArguments[gtype.Position];
-                                        paramtype = rtype.FullName;
-                                        try
-                                        {
-                                            var _type = rtype.Resolve();
-                                            foreach (var i in _type.Interfaces)
-                                            {
-                                                if (i.InterfaceType.Name == "IApiInterface")
-                                                {
-                                                    paramtype = "IInteropInterface";
-                                                }
-                                            }
-                                        }
-                                        catch
-                                        {
-                                        }
+                                        this.paramtypes.Add(new NeoParam(src.Name, rtype));
                                     }
-                                    this.paramtypes.Add(new NeoParam(src.Name, paramtype));
+                                    else
+                                    {
+                                        this.paramtypes.Add(new NeoParam(src.Name, src.ParameterType));
+                                    }
                                 }
                             }
                         }
@@ -194,50 +169,53 @@ namespace Neo.Compiler.MSIL
 
         public override string ToString()
         {
-            return type;
+            return FuncExport.ConvType(type);
         }
+    }
+
+    public class ILCatchInfo
+    {
+        public int addrBegin;
+        public int addrEnd;
+        public string catchType;
+    }
+
+    public class ILTryInfo
+    {
+        public int addr_Try_Begin = -1;
+        public int addr_Try_End = -1;
+        public int addr_Try_End_F = -1;//IL try catch，try final is 2 different Block,need to process that.
+        public Dictionary<string, ILCatchInfo> catch_Infos = new Dictionary<string, ILCatchInfo>();
+        public int addr_Finally_Begin = -1;
+        public int addr_Finally_End = -1;
     }
 
     public class ILMethod
     {
         public ILType type = null;
-        public Mono.Cecil.MethodDefinition method;
-        public string returntype;
+        public MethodDefinition method;
+        public TypeReference returntype;
         public List<NeoParam> paramtypes = new List<NeoParam>();
         public bool hasParam = false;
         public List<NeoParam> body_Variables = new List<NeoParam>();
         public SortedDictionary<int, OpCode> body_Codes = new SortedDictionary<int, OpCode>();
         public string fail = null;
-
-        public ILMethod(ILType type, Mono.Cecil.MethodDefinition method, ILogger logger = null)
+        public List<ILTryInfo> tryInfos = new List<ILTryInfo>();
+        public List<int> tryPositions = new List<int>();
+        public ILMethod(ILType type, MethodDefinition method, ILogger logger = null)
         {
             this.type = type;
             this.method = method;
 
             if (method != null)
             {
-                returntype = method.ReturnType.FullName;
+                returntype = method.ReturnType;
                 if (method.HasParameters)
                 {
                     hasParam = true;
                     foreach (var p in method.Parameters)
                     {
-                        string paramtype = p.ParameterType.FullName;
-                        try
-                        {
-                            var _type = p.ParameterType.Resolve();
-                            foreach (var i in _type.Interfaces)
-                            {
-                                if (i.InterfaceType.Name == "IApiInterface")
-                                {
-                                    paramtype = "IInteropInterface";
-                                }
-                            }
-                        }
-                        catch
-                        {
-                        }
-                        this.paramtypes.Add(new NeoParam(p.Name, paramtype));
+                        this.paramtypes.Add(new NeoParam(p.Name, p.ParameterType));
                     }
                 }
                 if (method.HasBody)
@@ -247,8 +225,10 @@ namespace Neo.Compiler.MSIL
                     {
                         foreach (var v in bodyNative.Variables)
                         {
-                            var indexname = v.VariableType.Name + ":" + v.Index;
-                            this.body_Variables.Add(new NeoParam(indexname, v.VariableType.FullName));
+                            var indexname = method.DebugInformation.TryGetName(v, out var varname)
+                                ? varname
+                                : v.VariableType.Name + ":" + v.Index;
+                            this.body_Variables.Add(new NeoParam(indexname, v.VariableType));
                         }
                     }
                     for (int i = 0; i < bodyNative.Instructions.Count; i++)
@@ -261,16 +241,184 @@ namespace Neo.Compiler.MSIL
                         };
 
                         var sp = method.DebugInformation.GetSequencePoint(code);
-                        if (sp != null)
+                        if (sp != null && !sp.IsHidden)
                         {
                             c.debugcode = sp.Document.Url;
                             c.debugline = sp.StartLine;
+                            c.sequencePoint = sp;
                         }
                         c.InitToken(code.Operand);
                         this.body_Codes.Add(c.addr, c);
                     }
+                    if (method.Body.HasExceptionHandlers)
+                    {
+                        var mapTryInfos = new Dictionary<string, ILTryInfo>();
+                        foreach (var e in method.Body.ExceptionHandlers)
+                        {
+                            if (e.HandlerType == Mono.Cecil.Cil.ExceptionHandlerType.Catch)
+                            {
+                                var key = e.TryStart.Offset + "_" + e.TryEnd.Offset;
+                                if (mapTryInfos.ContainsKey(key) == false)
+                                    mapTryInfos[key] = new ILTryInfo();
+
+                                var tryinfo = mapTryInfos[key];
+                                tryinfo.addr_Try_Begin = e.TryStart.Offset;
+                                tryinfo.addr_Try_End = e.TryEnd.Offset;
+
+                                var catchtypestr = e.CatchType.FullName;
+
+                                tryinfo.catch_Infos[catchtypestr] = new ILCatchInfo()
+                                {
+                                    addrBegin = e.HandlerStart.Offset,
+                                    addrEnd = e.HandlerEnd.Offset,
+                                    catchType = catchtypestr
+                                };
+                            }
+                            else if (e.HandlerType == Mono.Cecil.Cil.ExceptionHandlerType.Finally)
+                            {
+                                int start = e.TryStart.Offset;
+                                int end = e.TryEnd.Offset;
+                                Mono.Cecil.Cil.ExceptionHandler handler = null;
+                                foreach (var tryinfocatch in method.Body.ExceptionHandlers)
+                                {
+                                    if (tryinfocatch.HandlerType == Mono.Cecil.Cil.ExceptionHandlerType.Catch && tryinfocatch.TryStart.Offset == e.TryStart.Offset && tryinfocatch.TryEnd.Offset <= e.TryEnd.Offset)
+                                    {//find include catch element.
+                                        if (handler == null)
+                                            handler = tryinfocatch;
+                                        else if (handler.TryEnd.Offset < tryinfocatch.TryEnd.Offset)
+                                            handler = tryinfocatch;
+                                    }
+                                }
+                                if (handler != null)
+                                {
+                                    start = handler.TryStart.Offset;
+                                    end = handler.TryEnd.Offset;
+                                }
+
+                                var key = start + "_" + end;
+
+                                if (mapTryInfos.ContainsKey(key) == false)
+                                    mapTryInfos[key] = new ILTryInfo();
+
+                                var tryinfo = mapTryInfos[key];
+                                tryinfo.addr_Try_Begin = start;
+                                tryinfo.addr_Try_End = end;
+                                tryinfo.addr_Try_End_F = e.TryEnd.Offset;
+
+                                tryinfo.addr_Finally_Begin = e.HandlerStart.Offset;
+                                tryinfo.addr_Finally_End = e.HandlerEnd.Offset;
+                            }
+                            else
+                            {
+                                throw new Exception("not support yet." + e.HandlerType);
+                            }
+                        }
+                        this.tryInfos = new List<ILTryInfo>(mapTryInfos.Values);
+                        foreach (var info in this.tryInfos)
+                        {
+                            if (this.tryPositions.Contains(info.addr_Try_Begin) == false)
+                                this.tryPositions.Add(info.addr_Try_Begin);
+                        }
+                    }
                 }
             }
+        }
+
+        public enum TryCodeType
+        {
+            None,
+            Try,
+            Try_Final,
+            Catch,
+            Final,
+        }
+        public ILTryInfo GetTryInfo(int addr, out TryCodeType type)
+        {
+            type = TryCodeType.None;
+            ILTryInfo last = null;
+            int begin = -1;
+            int end = -1;
+            foreach (var info in tryInfos)
+            {
+                //check try first
+                if (info.addr_Try_Begin <= addr && addr < info.addr_Try_End)
+                {
+                    if (last == null)
+                    {
+                        type = TryCodeType.Try;
+                        last = info;
+                        begin = info.addr_Try_Begin;
+                        end = last.addr_Try_End;
+                    }
+                    else if (begin <= info.addr_Try_Begin && last.addr_Try_End < end)
+                    {
+                        type = TryCodeType.Try;
+                        last = info;
+                        begin = info.addr_Try_Begin;
+                        end = last.addr_Try_End;
+                    }
+                }
+
+                //then code in final but not in try
+                if (info.addr_Try_Begin <= addr && addr < info.addr_Try_End_F)
+                {
+                    if (last == null)
+                    {
+                        type = TryCodeType.Try_Final;
+                        last = info;
+                        begin = info.addr_Try_Begin;
+                        end = last.addr_Try_End_F;
+                    }
+                    else if (begin <= info.addr_Try_Begin && last.addr_Try_End_F < end)
+                    {
+                        type = TryCodeType.Try_Final;
+                        last = info;
+                        begin = info.addr_Try_Begin;
+                        end = last.addr_Try_End_F;
+                    }
+                }
+
+                //find match finally
+                if (info.addr_Finally_Begin <= addr && addr < info.addr_Finally_End)
+                {
+                    if (last == null)
+                    {
+                        type = TryCodeType.Final;
+                        last = info;
+                        begin = info.addr_Finally_Begin;
+                        end = last.addr_Finally_End;
+                    }
+                    else if (begin <= info.addr_Finally_Begin && last.addr_Finally_End < end)
+                    {
+                        type = TryCodeType.Final;
+                        last = info;
+                        begin = info.addr_Finally_Begin;
+                        end = last.addr_Finally_End;
+                    }
+                }
+                //find match catch
+                foreach (var c in info.catch_Infos)
+                {
+                    if (c.Value.addrBegin <= addr && addr < c.Value.addrEnd)
+                    {
+                        if (last == null)
+                        {
+                            type = TryCodeType.Catch;
+                            last = info;
+                            begin = c.Value.addrBegin;
+                            end = c.Value.addrEnd;
+                        }
+                        else if (begin <= c.Value.addrBegin && c.Value.addrBegin < end)
+                        {
+                            type = TryCodeType.Catch;
+                            last = info;
+                            begin = c.Value.addrBegin;
+                            end = c.Value.addrEnd;
+                        }
+                    }
+                }
+            }
+            return last;
         }
 
         public int GetLastCodeAddr(int srcaddr)
@@ -535,6 +683,7 @@ namespace Neo.Compiler.MSIL
         public CodeEx code;
         public int debugline = -1;
         public string debugcode;
+        public Mono.Cecil.Cil.SequencePoint sequencePoint;
         public object tokenUnknown;
         public int tokenAddr_Index;
         //public int tokenAddr;

@@ -18,7 +18,7 @@ namespace Neo.SmartContract.Framework.UnitTests.Services.Neo
             var rItem = result.Pop();
 
             Assert.IsInstanceOfType(rItem, typeof(Integer));
-            Assert.AreEqual(1, ((Integer)rItem).ToBigInteger());
+            Assert.AreEqual(1, ((Integer)rItem).GetInteger());
             Assert.AreEqual(1,
                 testengine.Snapshot.Storages.GetChangeSet()
                 .Count(a =>
@@ -45,9 +45,7 @@ namespace Neo.SmartContract.Framework.UnitTests.Services.Neo
         {
             var result = testengine.ExecuteTestCaseStandard(method, new ByteString(key));
             Assert.AreEqual(VM.VMState.HALT, testengine.State);
-            Assert.AreEqual(1, result.Count);
-            var rItem = result.Pop();
-            Assert.IsInstanceOfType(rItem, typeof(Integer));
+            Assert.AreEqual(0, result.Count);
             Assert.AreEqual(0, testengine.Snapshot.Storages.GetChangeSet().Count(a => a.Key.Key.SequenceEqual(Concat(prefix, key))));
         }
 
