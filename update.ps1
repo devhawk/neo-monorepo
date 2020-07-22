@@ -1,4 +1,4 @@
-param([string]$branch = "preview3s")
+param([string]$branch = "preview3")
 
 $currentBranch = git symbolic-ref -q --short HEAD 2> $null
 
