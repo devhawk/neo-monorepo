@@ -14,13 +14,13 @@ namespace Neo.Compiler.MSIL.UnitTests
         public void Test_Shift()
         {
             var list = new List<BigInteger>();
-            var method = new EventHandler<NotifyEventArgs>((sender, e) => list.Add(((VM.Types.Integer)((VM.Types.Array)e.State)[0]).ToBigInteger()));
+            var method = new EventHandler<NotifyEventArgs>((sender, e) => list.Add(((VM.Types.Integer)((VM.Types.Array)e.State)[0]).GetInteger()));
             ApplicationEngine.Notify += method;
 
             var testengine = new TestEngine();
             testengine.AddEntryScript("./TestClasses/Contract_shift.cs");
             testengine.ScriptEntry.DumpNEF();
-            var result = testengine.ExecuteTestCaseStandard("testfunc");
+            var result = testengine.ExecuteTestCaseStandard("main");
             ApplicationEngine.Notify -= method;
 
             CollectionAssert.AreEqual(new BigInteger[] { 16, 17179869184, 4, 0 }, list);
@@ -30,13 +30,13 @@ namespace Neo.Compiler.MSIL.UnitTests
         public void Test_Shift_BigInteger()
         {
             var list = new List<BigInteger>();
-            var method = new EventHandler<NotifyEventArgs>((sender, e) => list.Add(((VM.Types.Integer)((VM.Types.Array)e.State)[0]).ToBigInteger()));
+            var method = new EventHandler<NotifyEventArgs>((sender, e) => list.Add(((VM.Types.Integer)((VM.Types.Array)e.State)[0]).GetInteger()));
             ApplicationEngine.Notify += method;
 
             var testengine = new TestEngine();
             testengine.AddEntryScript("./TestClasses/Contract_shift_bigint.cs");
             testengine.ScriptEntry.DumpNEF();
-            var result = testengine.ExecuteTestCaseStandard("testfunc");
+            var result = testengine.ExecuteTestCaseStandard("main");
             ApplicationEngine.Notify -= method;
 
             CollectionAssert.AreEqual(new BigInteger[] { 8, 16, 4, 2 }, list);

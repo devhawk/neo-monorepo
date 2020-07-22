@@ -11,7 +11,6 @@ namespace Neo.Compiler
     {
         public NeoModule(ILogger logger) { }
 
-        public string mainMethod;
         public ConvOption option;
         public List<CustomAttribute> attributes = new List<CustomAttribute>();
         public Dictionary<string, NeoMethod> mapMethods = new Dictionary<string, NeoMethod>();
@@ -69,6 +68,21 @@ namespace Neo.Compiler
             json.ConvertToStringWithFormat(sb, 4);
             return sb.ToString();
         }
+
+        internal void ConvertFuncAddr()
+        {
+            foreach (var method in this.mapMethods.Values)
+            {
+                foreach (var code in method.body_Codes.Values)
+                {
+                    if (code.code != VM.OpCode.NOP)
+                    {
+                        method.funcaddr = code.addr;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     public class NeoMethod
@@ -78,12 +92,11 @@ namespace Neo.Compiler
         public int lastparam = -1; // The last param
         public int lastCast = -1;
 
-        public bool isEntry = false;
         public string _namespace;
         public string name;
         public string displayName;
         public List<NeoParam> paramtypes = new List<NeoParam>();
-        public string returntype;
+        public TypeReference returntype;
         public bool isPublic = true;
         public bool inSmartContract;
         public ILMethod method;
@@ -97,7 +110,7 @@ namespace Neo.Compiler
         {
             MyJson.JsonNode_Object json = new MyJson.JsonNode_Object();
             json.SetDictValue("name", this.name);
-            json.SetDictValue("returntype", this.returntype);
+            json.SetDictValue("returntype", FuncExport.ConvType(this.returntype));
             json.SetDictValue("paramcount", this.paramtypes.Count);
             MyJson.JsonNode_Array jsonparams = new MyJson.JsonNode_Array();
             json.SetDictValue("params", jsonparams);
@@ -105,7 +118,7 @@ namespace Neo.Compiler
             {
                 MyJson.JsonNode_Object item = new MyJson.JsonNode_Object();
                 item.SetDictValue("name", this.paramtypes[i].name);
-                item.SetDictValue("type", this.paramtypes[i].type);
+                item.SetDictValue("type", FuncExport.ConvType(this.paramtypes[i].type));
                 jsonparams.Add(item);
             }
             return json;
@@ -157,7 +170,7 @@ namespace Neo.Compiler
             displayName = value.displayName;
             paramtypes = value.paramtypes;
 
-            if (value.returntype != "System.Void")
+            if (FuncExport.ConvType(value.returntype) != "Void")
             {
                 throw new NotSupportedException($"NEP-3 does not support return types for events. Expected: `System.Void`, Detected: `{value.returntype}`");
             }
@@ -178,6 +191,7 @@ namespace Neo.Compiler
         public int srcaddr;
         public int[] srcaddrswitch;
         public string srcfunc;
+        public Mono.Cecil.Cil.SequencePoint sequencePoint;
 
         public override string ToString()
         {
@@ -236,7 +250,7 @@ namespace Neo.Compiler
     {
         public int index { get; private set; }
 
-        public NeoField(string name, string type, int index) : base(name, type)
+        public NeoField(string name, TypeReference type, int index) : base(name, type)
         {
             this.index = index;
         }
@@ -245,9 +259,9 @@ namespace Neo.Compiler
     public class NeoParam
     {
         public string name { get; private set; }
-        public string type { get; private set; }
+        public TypeReference type { get; private set; }
 
-        public NeoParam(string name, string type)
+        public NeoParam(string name, TypeReference type)
         {
             this.name = name;
             this.type = type;
@@ -255,7 +269,7 @@ namespace Neo.Compiler
 
         public override string ToString()
         {
-            return type + " " + name;
+            return FuncExport.ConvType(type) + " " + name;
         }
     }
 }

@@ -7,43 +7,25 @@ namespace Neo.Compiler.MSIL.UnitTests.Utils
 {
     public class BuildScript
     {
-        public bool IsBuild
-        {
-            get;
-            private set;
-        }
-        public Exception Error
-        {
-            get;
-            private set;
-        }
-        public ILModule modIL
-        {
-            get;
-            private set;
-        }
-        public ModuleConverter converterIL
-        {
-            get;
-            private set;
-        }
-        public byte[] finalNEF
-        {
-            get;
-            private set;
-        }
-        public MyJson.JsonNode_Object finialABI
-        {
-            get;
-            private set;
-        }
+        public bool IsBuild { get; protected set; }
+        public bool UseOptimizer { get; protected set; }
+        public Exception Error { get; protected set; }
+        public ILModule modIL { get; private set; }
+        public ModuleConverter converterIL { get; private set; }
+        public byte[] finalNEF { get; protected set; }
+        public MyJson.JsonNode_Object finalABI { get; protected set; }
+        public string finalManifest { get; protected set; }
+        public MyJson.JsonNode_Object debugInfo { get; private set; }
+
         public BuildScript()
         {
         }
+
         public void Build(Stream fs, Stream fspdb, bool optimizer)
         {
             this.IsBuild = false;
             this.Error = null;
+            this.UseOptimizer = optimizer;
 
             var log = new DefLogger();
             this.modIL = new ILModule(log);
@@ -59,6 +41,7 @@ namespace Neo.Compiler.MSIL.UnitTests.Utils
             }
 
             converterIL = new ModuleConverter(log);
+            Dictionary<int, int> addrConvTable = null;
             ConvOption option = new ConvOption();
 #if NDEBUG
             try
@@ -69,7 +52,13 @@ namespace Neo.Compiler.MSIL.UnitTests.Utils
                 finalNEF = converterIL.outModule.Build();
                 if (optimizer)
                 {
-                    var opbytes = NefOptimizeTool.Optimize(finalNEF);
+                    List<int> entryPoints = new List<int>();
+                    foreach (var f in converterIL.outModule.mapMethods.Values)
+                    {
+                        if (entryPoints.Contains(f.funcaddr) == false)
+                            entryPoints.Add(f.funcaddr);
+                    }
+                    var opbytes = NefOptimizeTool.Optimize(finalNEF, entryPoints.ToArray(), out addrConvTable);
                     float ratio = (opbytes.Length * 100.0f) / (float)finalNEF.Length;
                     log.Log("optimization ratio = " + ratio + "%");
                     finalNEF = opbytes;
@@ -86,10 +75,35 @@ namespace Neo.Compiler.MSIL.UnitTests.Utils
 #endif
             try
             {
-                finialABI = vmtool.FuncExport.Export(converterIL.outModule, finalNEF);
+                finalABI = FuncExport.Export(converterIL.outModule, finalNEF, addrConvTable);
             }
-            catch
+            catch (Exception err)
             {
+                log.Log("Gen Abi Error:" + err.ToString());
+                this.Error = err;
+                return;
+            }
+
+            try
+            {
+                debugInfo = DebugExport.Export(converterIL.outModule, finalNEF, addrConvTable);
+            }
+            catch (Exception err)
+            {
+                log.Log("Gen debugInfo Error:" + err.ToString());
+                this.Error = err;
+                return;
+            }
+
+            try
+            {
+                finalManifest = FuncExport.GenerateManifest(finalABI, converterIL.outModule);
+            }
+            catch (Exception err)
+            {
+                log.Log("Gen Manifest Error:" + err.ToString());
+                this.Error = err;
+                return;
             }
         }
 
