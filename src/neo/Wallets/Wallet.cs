@@ -21,6 +21,7 @@ namespace Neo.Wallets
     public abstract class Wallet
     {
         public abstract string Name { get; }
+        public string Path { get; }
         public abstract Version Version { get; }
 
         public abstract bool ChangePassword(string oldPassword, string newPassword);
@@ -31,6 +32,15 @@ namespace Neo.Wallets
         public abstract bool DeleteAccount(UInt160 scriptHash);
         public abstract WalletAccount GetAccount(UInt160 scriptHash);
         public abstract IEnumerable<WalletAccount> GetAccounts();
+
+        internal Wallet()
+        {
+        }
+
+        protected Wallet(string path)
+        {
+            this.Path = path;
+        }
 
         public WalletAccount CreateAccount()
         {
@@ -133,11 +143,11 @@ namespace Neo.Wallets
                 sb.EmitAppCall(asset_id, "decimals");
                 script = sb.ToArray();
             }
-            using ApplicationEngine engine = ApplicationEngine.Run(script, extraGAS: 20000000L * accounts.Length);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, gas: 20000000L * accounts.Length);
             if (engine.State.HasFlag(VMState.FAULT))
                 return new BigDecimal(0, 0);
-            byte decimals = (byte)engine.ResultStack.Pop().GetBigInteger();
-            BigInteger amount = engine.ResultStack.Pop().GetBigInteger();
+            byte decimals = (byte)engine.ResultStack.Pop().GetInteger();
+            BigInteger amount = engine.ResultStack.Pop().GetInteger();
             return new BigDecimal(amount, decimals);
         }
 
@@ -180,6 +190,26 @@ namespace Neo.Wallets
             Buffer.BlockCopy(data, 1, privateKey, 0, privateKey.Length);
             Array.Clear(data, 0, data.Length);
             return privateKey;
+        }
+
+        private static Signer[] GetSigners(UInt160 sender, Signer[] cosigners)
+        {
+            for (int i = 0; i < cosigners.Length; i++)
+            {
+                if (cosigners[i].Account.Equals(sender))
+                {
+                    if (i == 0) return cosigners;
+                    List<Signer> list = new List<Signer>(cosigners);
+                    list.RemoveAt(i);
+                    list.Insert(0, cosigners[i]);
+                    return list.ToArray();
+                }
+            }
+            return cosigners.Prepend(new Signer
+            {
+                Account = sender,
+                Scopes = WitnessScope.FeeOnly
+            }).ToArray();
         }
 
         public virtual WalletAccount Import(X509Certificate2 cert)
@@ -241,7 +271,7 @@ namespace Neo.Wallets
                                 {
                                     if (engine.State.HasFlag(VMState.FAULT))
                                         throw new InvalidOperationException($"Execution for {assetId.ToString()}.balanceOf('{account.ToString()}' fault");
-                                    BigInteger value = engine.ResultStack.Pop().GetBigInteger();
+                                    BigInteger value = engine.ResultStack.Pop().GetInteger();
                                     if (value.Sign > 0) balances.Add((account, value));
                                 }
                             }
@@ -267,19 +297,18 @@ namespace Neo.Wallets
                 if (balances_gas is null)
                     balances_gas = accounts.Select(p => (Account: p, Value: NativeContract.GAS.BalanceOf(snapshot, p))).Where(p => p.Value.Sign > 0).ToList();
 
-                var cosigners = cosignerList.Select(p =>
-                         new Cosigner()
-                         {
-                             // default access for transfers should be valid only for first invocation
-                             Scopes = WitnessScope.CalledByEntry,
-                             Account = new UInt160(p.ToArray())
-                         }).ToArray();
+                var cosigners = cosignerList.Select(p => new Signer()
+                {
+                    // default access for transfers should be valid only for first invocation
+                    Scopes = WitnessScope.CalledByEntry,
+                    Account = p
+                }).ToArray();
 
-                return MakeTransaction(snapshot, script, new TransactionAttribute[0], cosigners, balances_gas);
+                return MakeTransaction(snapshot, script, cosigners, Array.Empty<TransactionAttribute>(), balances_gas);
             }
         }
 
-        public Transaction MakeTransaction(byte[] script, UInt160 sender = null, TransactionAttribute[] attributes = null, Cosigner[] cosigners = null)
+        public Transaction MakeTransaction(byte[] script, UInt160 sender = null, Signer[] cosigners = null, TransactionAttribute[] attributes = null)
         {
             UInt160[] accounts;
             if (sender is null)
@@ -289,17 +318,17 @@ namespace Neo.Wallets
             else
             {
                 if (!Contains(sender))
-                    throw new ArgumentException($"The address {sender.ToString()} was not found in the wallet");
+                    throw new ArgumentException($"The address {sender} was not found in the wallet");
                 accounts = new[] { sender };
             }
             using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 var balances_gas = accounts.Select(p => (Account: p, Value: NativeContract.GAS.BalanceOf(snapshot, p))).Where(p => p.Value.Sign > 0).ToList();
-                return MakeTransaction(snapshot, script, attributes ?? new TransactionAttribute[0], cosigners ?? new Cosigner[0], balances_gas);
+                return MakeTransaction(snapshot, script, cosigners ?? Array.Empty<Signer>(), attributes ?? Array.Empty<TransactionAttribute>(), balances_gas);
             }
         }
 
-        private Transaction MakeTransaction(StoreView snapshot, byte[] script, TransactionAttribute[] attributes, Cosigner[] cosigners, List<(UInt160 Account, BigInteger Value)> balances_gas)
+        private Transaction MakeTransaction(StoreView snapshot, byte[] script, Signer[] cosigners, TransactionAttribute[] attributes, List<(UInt160 Account, BigInteger Value)> balances_gas)
         {
             Random rand = new Random();
             foreach (var (account, value) in balances_gas)
@@ -309,23 +338,25 @@ namespace Neo.Wallets
                     Version = 0,
                     Nonce = (uint)rand.Next(),
                     Script = script,
-                    Sender = account,
                     ValidUntilBlock = snapshot.Height + Transaction.MaxValidUntilBlockIncrement,
+                    Signers = GetSigners(account, cosigners),
                     Attributes = attributes,
-                    Cosigners = cosigners
                 };
+
                 // will try to execute 'transfer' script to check if it works
                 using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot.Clone(), tx, testMode: true))
                 {
-                    if (engine.State.HasFlag(VMState.FAULT))
-                        throw new InvalidOperationException($"Failed execution for '{script.ToHexString()}'");
-                    tx.SystemFee = Math.Max(engine.GasConsumed - ApplicationEngine.GasFree, 0);
+                    if (engine.State == VMState.FAULT)
+                    {
+                        throw new InvalidOperationException($"Failed execution for '{script.ToHexString()}'", engine.FaultException);
+                    }
+                    tx.SystemFee = engine.GasConsumed;
                 }
 
                 UInt160[] hashes = tx.GetScriptHashesForVerifying(snapshot);
 
-                // base size for transaction: includes const_header + attributes + cosigners with scopes + script + hashes
-                int size = Transaction.HeaderSize + attributes.GetVarSize() + cosigners.GetVarSize() + script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
+                // base size for transaction: includes const_header + signers + attributes + script + hashes
+                int size = Transaction.HeaderSize + tx.Signers.GetVarSize() + tx.Attributes.GetVarSize() + script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
 
                 foreach (UInt160 hash in hashes)
                 {
@@ -346,7 +377,7 @@ namespace Neo.Wallets
             if (witness_script.IsSignatureContract())
             {
                 size += 67 + witness_script.GetVarSize();
-                networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + InteropService.GetPrice(InteropService.Crypto.ECDsaVerify, null, null);
+                networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice;
             }
             else if (witness_script.IsMultiSigContract(out int m, out int n))
             {
@@ -358,7 +389,7 @@ namespace Neo.Wallets
                 networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] * n;
                 using (ScriptBuilder sb = new ScriptBuilder())
                     networkFee += ApplicationEngine.OpCodePrices[(OpCode)sb.EmitPush(n).ToArray()[0]];
-                networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + InteropService.GetPrice(InteropService.Crypto.ECDsaVerify, null, null) * n;
+                networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice * n;
             }
             else
             {
