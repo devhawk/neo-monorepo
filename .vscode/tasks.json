@@ -19,6 +19,24 @@
                 "reveal": "silent"
             },
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack neon",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "pack",
+                "${workspaceFolder}/devpack/src/Neo.Compiler.MSIL",
+                "-o",
+                "${workspaceFolder}",
+                "-c",
+                "Release"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
         }
     ]
 }
