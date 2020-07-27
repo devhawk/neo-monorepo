@@ -9,4 +9,7 @@ if ($currentBranch -ne $branch) {
     git subtree pull --prefix core official-core $branch --squash
     git subtree pull --prefix modules official-modules $branch --squash
     git subtree pull --prefix devpack official-devpack $branch --squash
+
+    git checkout "monorepo-$branch"
+    git merge $branch
 }
