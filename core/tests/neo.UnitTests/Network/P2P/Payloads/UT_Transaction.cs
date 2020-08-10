@@ -35,6 +35,25 @@ namespace Neo.UnitTests.Network.P2P.Payloads
         }
 
         [TestMethod]
+        public void FromStackItem()
+        {
+            Assert.ThrowsException<NotSupportedException>(() => ((IInteroperable)uut).FromStackItem(VM.Types.StackItem.Null));
+        }
+
+        [TestMethod]
+        public void TestEquals()
+        {
+            Assert.IsTrue(uut.Equals(uut));
+            Assert.IsFalse(uut.Equals(null));
+        }
+
+        [TestMethod]
+        public void InventoryType_Get()
+        {
+            ((IInventory)uut).InventoryType.Should().Be(InventoryType.TX);
+        }
+
+        [TestMethod]
         public void Script_Set()
         {
             byte[] val = TestUtils.GetByteArray(32, 0x42);
@@ -145,7 +164,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 long verificationGas = 0;
                 foreach (var witness in tx.Witnesses)
                 {
-                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee, false))
+                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee))
                     {
                         engine.LoadScript(witness.VerificationScript);
                         engine.LoadScript(witness.InvocationScript);
@@ -227,7 +246,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 long verificationGas = 0;
                 foreach (var witness in tx.Witnesses)
                 {
-                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee, false))
+                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee))
                     {
                         engine.LoadScript(witness.VerificationScript);
                         engine.LoadScript(witness.InvocationScript);
@@ -340,7 +359,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 long verificationGas = 0;
                 foreach (var witness in tx.Witnesses)
                 {
-                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee, false))
+                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee))
                     {
                         engine.LoadScript(witness.VerificationScript);
                         engine.LoadScript(witness.InvocationScript);
@@ -427,7 +446,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 long verificationGas = 0;
                 foreach (var witness in tx.Witnesses)
                 {
-                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee, false))
+                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee))
                     {
                         engine.LoadScript(witness.VerificationScript);
                         engine.LoadScript(witness.InvocationScript);
@@ -517,7 +536,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 long verificationGas = 0;
                 foreach (var witness in tx.Witnesses)
                 {
-                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee, false))
+                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee))
                     {
                         engine.LoadScript(witness.VerificationScript);
                         engine.LoadScript(witness.InvocationScript);
@@ -659,7 +678,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 long verificationGas = 0;
                 foreach (var witness in tx.Witnesses)
                 {
-                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee, false))
+                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee))
                     {
                         engine.LoadScript(witness.VerificationScript);
                         engine.LoadScript(witness.InvocationScript);
@@ -940,7 +959,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
             // Global is supposed to be default
 
             Signer cosigner = new Signer();
-            cosigner.Scopes.Should().Be(WitnessScope.FeeOnly);
+            cosigner.Scopes.Should().Be(WitnessScope.None);
 
             var wallet = TestUtils.GenerateTestWallet();
             var snapshot = Blockchain.Singleton.GetSnapshot();
@@ -977,7 +996,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 var signers = new Signer[]{ new Signer
                 {
                     Account = acc.ScriptHash,
-                    Scopes =  WitnessScope.FeeOnly
+                    Scopes =  WitnessScope.None
                 } };
 
                 Assert.ThrowsException<InvalidOperationException>(() => wallet.MakeTransaction(script, acc.ScriptHash, signers));
@@ -1009,7 +1028,7 @@ namespace Neo.UnitTests.Network.P2P.Payloads
                 long verificationGas = 0;
                 foreach (var witness in tx.Witnesses)
                 {
-                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee, false))
+                    using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot, tx.NetworkFee))
                     {
                         engine.LoadScript(witness.VerificationScript);
                         engine.LoadScript(witness.InvocationScript);
