@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <Copyright>2016-2020 The Neo Project</Copyright>
+    <AssemblyTitle>Neo.CLI</AssemblyTitle>
+    <Version>3.0.0-preview3</Version>
+    <Authors>The Neo Project</Authors>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <AssemblyName>neo-cli</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>Neo.CLI</PackageId>
+    <RootNamespace>Neo</RootNamespace>
+    <Company>The Neo Project</Company>
+    <Product>Neo.CLI</Product>
+    <Description>Neo.CLI</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>False</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="config.json;config.mainnet.json;config.testnet.json;protocol.json;protocol.mainnet.json;protocol.testnet.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo" Version="3.0.0-CI00998" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neo.ConsoleService\Neo.ConsoleService.csproj" />
+  </ItemGroup>
+
+</Project>
