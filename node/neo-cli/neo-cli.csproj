@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  
+
   <PropertyGroup>
     <Copyright>2016-2020 The Neo Project</Copyright>
     <AssemblyTitle>Neo.CLI</AssemblyTitle>
@@ -28,11 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-CI00998" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Neo.ConsoleService\Neo.ConsoleService.csproj" />
+    <ProjectReference Include="..\..\core\src\neo\neo.csproj" />
   </ItemGroup>
 
 </Project>
