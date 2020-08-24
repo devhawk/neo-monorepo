@@ -36,6 +36,7 @@ command like this:
 git remote add -f official-core https://github.com/neo-project/neo.git
 git remote add -f official-devpack https://github.com/neo-project/neo-devpack-dotnet.git
 git remote add -f official-modules https://github.com/neo-project/neo-modules.git
+git remote add -f official-node https://github.com/neo-project/neo-node.git
 git remote add -f official-vm https://github.com/neo-project/neo-vm.git
 ```
 
@@ -64,4 +65,5 @@ git subtree pull --prefix vm official-vm master --squash
 git subtree pull --prefix core official-core master --squash
 git subtree pull --prefix modules official-modules master --squash
 git subtree pull --prefix devpack official-devpack master --squash
+git subtree pull --prefix node official-node master --squash
 ```
