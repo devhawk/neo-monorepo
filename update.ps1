@@ -1,15 +1,19 @@
-param([string]$branch = "master")
+param([string]$branch = "master", [switch]$merge)
 
 $currentBranch = git symbolic-ref -q --short HEAD 2> $null
 
 if ($currentBranch -ne $branch) {
-    Write-error "wrong branch $branch"
-} else {
-    git subtree pull --prefix vm official-vm $branch --squash
-    git subtree pull --prefix core official-core $branch --squash
-    git subtree pull --prefix modules official-modules $branch --squash
-    git subtree pull --prefix devpack official-devpack $branch --squash
+    throw "wrong branch $branch"
+} 
 
+$projects = "core","devpack","modules","node","vm"
+
+git fetch --all
+foreach ($prj in $projects) {
+    git subtree pull --prefix $prj "official-$prj" $branch --squash
+}
+
+if ($merge) {
     git checkout "monorepo-$branch"
     git merge $branch
 }
