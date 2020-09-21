@@ -5,6 +5,8 @@
     <AssemblyTitle>Neo.Compiler.MSIL</AssemblyTitle>
     <Version>3.0.0-preview3</Version>
     <Authors>The Neo Project</Authors>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>neon</AssemblyName>
     <PackageTags>NEO;Blockchain;Smart Contract;Compiler</PackageTags>
     <PackageProjectUrl>https://github.com/neo-project/neo-devpack-dotnet</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -20,21 +22,17 @@
   <!--
     https://johan-v-r.github.io/2018/09/05/NET-Core-Global-Tools-Configuration/
       `dotnet pack` to build .NET Core 3.1 global tool
-      `dotnet pack /p:SharedLibrary=true` to build .NET Standard 2. library package
+      `dotnet pack /p:SharedLibrary=true` to build .NET Standard 2.0 library package
   -->
 
   <PropertyGroup Condition="'$(SharedLibrary)' != true">
-    <AssemblyName>neon3</AssemblyName>
-    <AssemblyTitle>neon3</AssemblyTitle>
     <OutputType>Exe</OutputType>
-    <PackageId>Neo.Neon3</PackageId>
+    <PackageId>Neo.Neon</PackageId>
     <PackAsTool>true</PackAsTool>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(SharedLibrary)' == true">
-    <AssemblyName>Neo.Compiler.MSIL</AssemblyName>
-    <AssemblyTitle>Neo.Compiler.MSIL</AssemblyTitle>
     <PackageId>Neo.Compiler.MSIL</PackageId>
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
