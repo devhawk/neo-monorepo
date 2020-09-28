@@ -1,8 +1,9 @@
 # Neo3 MonoRepo
 
 This repo pulls together the code from [neo](https://github.com/neo-project/neo),
-[neo-vm](https://github.com/neo-project/neo-vm), [neo-modules](https://github.com/neo-project/neo-modules)
-and [neo-devpack-dotnet](https://github.com/neo-project/neo-devpack-dotnet)
+[neo-vm](https://github.com/neo-project/neo-vm), [neo-modules](https://github.com/neo-project/neo-modules),
+ [neo-devpack-dotnet](https://github.com/neo-project/neo-devpack-dotnet) and 
+[neo-node](https://github.com/neo-project/neo-node)
 into a single repo. Additionally, project dependencies in branches using the `monorepo-` prefix
 have been updated to use intra-repo project references instead of pulling CI packages from MyGet.
 This way, you can compile the major parts the Neo platform together in one place.
