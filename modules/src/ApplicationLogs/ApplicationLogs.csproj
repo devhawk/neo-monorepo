@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
+    <ProjectReference Include="..\..\..\core\src\neo\neo.csproj" />
   </ItemGroup>
 
 </Project>
