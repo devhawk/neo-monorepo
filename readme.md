@@ -22,6 +22,28 @@ corresponding local branches to track future Neo 3 preview releases.
 For each local repo branch, there is a branch prefixed `monorepo-` that has the modified project
 dependencies. So while `master` branch CI packages from MyGet, `monorepo-master` branch uses intra-repo package references. Same for `preview-2` and `monorepo-preview2`.
 
+## NuGet Feed
+
+This repo now has a NuGet package feed at https://neomonorepopackages.blob.core.windows.net/packages/index.json.
+Packages in this feed all have a package version suffix following this pattern: "mono-*branch*-*git rev-list count*".
+
+> Note, the packages in this feed use the same `git rev-list --count HEAD` command that generates the version suffix
+  used in the [Neo MyGet feed](https://www.myget.org/gallery/neo). However, this repo has a different git history
+  and so the rev-list count suffix for packages from the Neo MyGet feed has no correlation to the packages in the
+  Neo MonoRepo packages feed.
+
+To use the Neo MonoRepo packages feed in your project, run `dotnet new nugetconfig` in the root of your project and then
+update the generated nuget.config file to include this package feed.
+
+``` xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="neo-monorepo" value=" https://neomonorepopackages.blob.core.windows.net/packages/index.json" />
+  </packageSources>
+</configuration>
+```
+
 ## Setup
 
 > Note, I'm including this section for those who are interested in understanding how I created
