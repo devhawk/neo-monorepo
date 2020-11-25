@@ -20,7 +20,11 @@ branch that tracks the preview2 tagged commits in the other repos. I will be cre
 corresponding local branches to track future Neo 3 preview releases.
 
 For each local repo branch, there is a branch prefixed `monorepo-` that has the modified project
-dependencies. So while `master` branch CI packages from MyGet, `monorepo-master` branch uses intra-repo package references. Same for `preview-2` and `monorepo-preview2`.
+dependencies. So while `master` branch CI packages from MyGet, `monorepo-master` branch uses
+intra-repo package references. Same for `preview-2` and `monorepo-preview2`.
+
+> Note, `monoprepo-` prefixed branches can also sometimes have targeted patches in order to unblock
+  Neo Blockchain Toolkit development while waiting on official fixes.
 
 ## NuGet Feed
 
