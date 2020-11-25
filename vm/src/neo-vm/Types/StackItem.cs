@@ -1,5 +1,6 @@
 #pragma warning disable CS0659
 
+using Neo.VM.Collections;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -24,7 +25,7 @@ namespace Neo.VM.Types
 
         public StackItem DeepCopy()
         {
-            return DeepCopy(new Dictionary<StackItem, StackItem>(ReferenceEqualityComparer.Instance));
+            return DeepCopy(new Dictionary<StackItem, StackItem>(ReferenceEqualityComparer.Default));
         }
 
         internal virtual StackItem DeepCopy(Dictionary<StackItem, StackItem> refMap)
@@ -70,30 +71,6 @@ namespace Neo.VM.Types
         public virtual string GetString()
         {
             return Utility.StrictUTF8.GetString(GetSpan());
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator StackItem(sbyte value)
-        {
-            return (Integer)value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator StackItem(byte value)
-        {
-            return (Integer)value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator StackItem(short value)
-        {
-            return (Integer)value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator StackItem(ushort value)
-        {
-            return (Integer)value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
