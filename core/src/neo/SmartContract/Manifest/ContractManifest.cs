@@ -163,7 +163,9 @@ namespace Neo.SmartContract.Manifest
 
         private void DeserializeFromJson(JObject json)
         {
-            Name = json["name"].AsString();
+            // MONOREPO PATCH START
+            Name = json["name"]?.AsString() ?? string.Empty;
+            // MONOREPO PATCH END
             Groups = ((JArray)json["groups"]).Select(u => ContractGroup.FromJson(u)).ToArray();
             SupportedStandards = ((JArray)json["supportedstandards"]).Select(u => u.AsString()).ToArray();
             Abi = ContractAbi.FromJson(json["abi"]);
