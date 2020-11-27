@@ -13,8 +13,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\core\src\neo\neo.csproj" />
-  </ItemGroup>
-
 </Project>

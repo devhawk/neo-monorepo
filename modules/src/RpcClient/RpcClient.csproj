@@ -5,8 +5,4 @@
     <RootNamespace>Neo.Network.RPC</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\core\src\neo\neo.csproj" />
-  </ItemGroup>
-
 </Project>
