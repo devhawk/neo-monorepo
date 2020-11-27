@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace Neo.Cryptography.MPT
+namespace Neo.Plugins.MPT
 {
     public class BranchNode : MPTNode
     {

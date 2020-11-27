@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography.MPT;
 using System.Text;
 
-namespace Neo.UnitTests.Cryptography.MPT
+namespace Neo.Plugins.StateService.Tests.MPT
 {
     [TestClass]
     public class UT_MPTNode

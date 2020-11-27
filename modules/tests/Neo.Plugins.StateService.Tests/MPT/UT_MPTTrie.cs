@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Neo.UnitTests.Cryptography.MPT
+namespace Neo.Plugins.StateService.Tests.MPT
 {
     public class TestKey : ISerializable
     {

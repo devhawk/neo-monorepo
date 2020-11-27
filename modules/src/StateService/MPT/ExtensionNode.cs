@@ -2,7 +2,7 @@ using Neo.IO;
 using Neo.SmartContract;
 using System.IO;
 
-namespace Neo.Cryptography.MPT
+namespace Neo.Plugins.MPT
 {
     public class ExtensionNode : MPTNode
     {

@@ -1,9 +1,10 @@
+using Neo.Cryptography;
 using Neo.IO;
 using Neo.Persistence;
 using System;
 using System.Collections.Generic;
 
-namespace Neo.Cryptography.MPT
+namespace Neo.Plugins.MPT
 {
     partial class MPTTrie<TKey, TValue>
     {

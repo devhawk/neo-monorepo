@@ -1,7 +1,7 @@
 using Neo.IO;
 using System;
 
-namespace Neo.Cryptography.MPT
+namespace Neo.Plugins.MPT
 {
     partial class MPTTrie<TKey, TValue>
     {

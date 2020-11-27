@@ -1,9 +1,10 @@
+using Neo.Cryptography;
 using Neo.IO;
 using Neo.IO.Caching;
 using System;
 using System.IO;
 
-namespace Neo.Cryptography.MPT
+namespace Neo.Plugins.MPT
 {
     public abstract class MPTNode
     {

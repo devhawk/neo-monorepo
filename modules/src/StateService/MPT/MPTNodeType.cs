@@ -1,6 +1,6 @@
 using Neo.IO.Caching;
 
-namespace Neo.Cryptography.MPT
+namespace Neo.Plugins.MPT
 {
     public enum NodeType : byte
     {

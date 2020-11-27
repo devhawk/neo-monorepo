@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using static Neo.Helper;
 
-namespace Neo.Cryptography.MPT
+namespace Neo.Plugins.MPT
 {
     partial class MPTTrie<TKey, TValue>
     {
