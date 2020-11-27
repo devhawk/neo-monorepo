@@ -6,4 +6,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\core\src\neo\neo.csproj" />
+  </ItemGroup>
+
 </Project>
