@@ -28,6 +28,8 @@ intra-repo package references. Same for `preview-2` and `monorepo-preview2`.
 
 ## NuGet Feed
 
+[![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.json)](https://neomonorepopackages.blob.core.windows.net/packages/index.json)
+
 This repo now has a NuGet package feed at https://neomonorepopackages.blob.core.windows.net/packages/index.json.
 Packages in this feed all have a package version suffix following this pattern: "mono-*branch*-*git rev-list count*".
 
@@ -43,7 +45,7 @@ update the generated nuget.config file to include this package feed.
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="neo-monorepo" value=" https://neomonorepopackages.blob.core.windows.net/packages/index.json" />
+    <add key="neo-monorepo" value="https://neomonorepopackages.blob.core.windows.net/packages/index.json" />
   </packageSources>
 </configuration>
 ```
