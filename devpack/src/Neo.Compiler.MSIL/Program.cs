@@ -211,13 +211,16 @@ namespace Neo.Compiler
             try
             {
                 string bytesname = onlyname + ".nef";
+
+                // MONOREPO PATCH: Update version/scripthash to match neo master
                 var nef = new NefFile
                 {
                     Compiler = "neon",
                     Version = Version.Parse(((AssemblyFileVersionAttribute)Assembly.GetAssembly(typeof(Program))
-                        .GetCustomAttribute(typeof(AssemblyFileVersionAttribute))).Version),
+                        .GetCustomAttribute(typeof(AssemblyFileVersionAttribute))).Version)
+                        .ToString(),
                     Script = bytes,
-                    ScriptHash = bytes.ToScriptHash()
+                    // ScriptHash = bytes.ToScriptHash()
                 };
                 nef.CheckSum = NefFile.ComputeChecksum(nef);
 
