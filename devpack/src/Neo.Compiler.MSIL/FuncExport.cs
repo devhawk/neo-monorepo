@@ -217,10 +217,17 @@ namespace Neo.Compiler
             var extra = BuildExtraAttributes(extraAttributes);
             var supportedStandards = BuildSupportedStandards(supportedStandardsAttribute);
 
+            // MONOREPO PATCH: name property in manifest visibility
+            var name = module.attributes
+                .Where(u => u.AttributeType.FullName == "Neo.SmartContract.Framework.ManifestNameAttribute")
+                .Select(u => ScapeJson((string)u.ConstructorArguments.FirstOrDefault().Value))
+                .FirstOrDefault() ?? "";
+
             return
                 @"{""groups"":[],""abi"":" +
                 sbABI +
-                @",""permissions"":[{""contract"":""*"",""methods"":""*""}],""trusts"":[],""safemethods"":[],""supportedstandards"":" + supportedStandards + @",""extra"":" + extra + "}";
+                @",""permissions"":[{""contract"":""*"",""methods"":""*""}],""trusts"":[],""safemethods"":[],""name"":""" + name +
+                @""",""supportedstandards"":" + supportedStandards + @",""extra"":" + extra + "}";
         }
     }
 }
