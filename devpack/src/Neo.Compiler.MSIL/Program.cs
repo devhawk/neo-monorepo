@@ -211,8 +211,6 @@ namespace Neo.Compiler
             try
             {
                 string bytesname = onlyname + ".nef";
-
-                // MONOREPO PATCH: Update version/scripthash to match neo master
                 var nef = new NefFile
                 {
                     Compiler = "neon",
