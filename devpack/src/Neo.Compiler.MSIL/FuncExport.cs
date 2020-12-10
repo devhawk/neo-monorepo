@@ -64,28 +64,9 @@ namespace Neo.Compiler
             return "Unknown:" + type;
         }
 
-        public static string ComputeHash(byte[] script)
-        {
-            var sha256 = System.Security.Cryptography.SHA256.Create();
-            byte[] hash256 = sha256.ComputeHash(script);
-            var ripemd160 = new Neo.Cryptography.RIPEMD160Managed();
-            var hash = ripemd160.ComputeHash(hash256);
-
-            StringBuilder sb = new StringBuilder();
-            sb.Append("0x");
-            for (int i = hash.Length - 1; i >= 0; i--)
-            {
-                sb.Append(hash[i].ToString("x02"));
-            }
-            return sb.ToString();
-        }
-
-        public static JObject Export(NeoModule module, byte[] script, Dictionary<int, int> addrConvTable)
+        public static JObject GenerateAbi(NeoModule module, Dictionary<int, int> addrConvTable)
         {
             var outjson = new JObject();
-
-            //hash
-            outjson["hash"] = ComputeHash(script);
 
             //functions
             var methods = new JArray();
@@ -217,9 +198,8 @@ namespace Neo.Compiler
             var extra = BuildExtraAttributes(extraAttributes);
             var supportedStandards = BuildSupportedStandards(supportedStandardsAttribute);
 
-            // MONOREPO PATCH: name property in manifest visibility
             var name = module.attributes
-                .Where(u => u.AttributeType.FullName == "Neo.SmartContract.Framework.ManifestNameAttribute")
+                .Where(u => u.AttributeType.FullName == "System.ComponentModel.DisplayNameAttribute")
                 .Select(u => ScapeJson((string)u.ConstructorArguments.FirstOrDefault().Value))
                 .FirstOrDefault() ?? "";
 
