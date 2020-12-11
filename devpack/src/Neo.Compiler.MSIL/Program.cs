@@ -191,7 +191,6 @@ namespace Neo.Compiler
 
                 try
                 {
-                    // MONOREPO PATCH: bytes param
                     var outjson = DebugExport.Export(module, bytes, addrConvTable);
                     debugstr = outjson.ToString(false);
                     log.Log("gen debug succ");

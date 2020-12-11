@@ -123,7 +123,6 @@ namespace Neo.Compiler
             addrConvTable ??= ImmutableDictionary<int, int>.Empty;
 
             var outjson = new JObject();
-            // MONOREPO PATCH: include hash in debug info
             outjson["hash"] = ComputeHash(script);
             outjson["documents"] = GetDocuments(docMap);
             outjson["methods"] = GetMethods(module, docMap, addrConvTable);
