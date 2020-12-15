@@ -4,8 +4,7 @@ using System.Reflection;
 
 namespace Neo.IO.Caching
 {
-    // MONOREPO PATCH: public visibility
-    public static class ReflectionCache<T> where T : Enum
+    internal static class ReflectionCache<T> where T : Enum
     {
         private static readonly Dictionary<T, Type> dictionary = new Dictionary<T, Type>();
 

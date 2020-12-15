@@ -2,8 +2,7 @@ using System.Collections.Generic;
 
 namespace Neo.IO
 {
-    // MONOREPO PATCH: public visibility
-    public class ByteArrayEqualityComparer : IEqualityComparer<byte[]>
+    internal class ByteArrayEqualityComparer : IEqualityComparer<byte[]>
     {
         public static readonly ByteArrayEqualityComparer Default = new ByteArrayEqualityComparer();
 

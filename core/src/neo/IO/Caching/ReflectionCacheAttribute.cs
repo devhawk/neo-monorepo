@@ -2,9 +2,8 @@ using System;
 
 namespace Neo.IO.Caching
 {
-    // MONOREPO PATCH: public visibility
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
-    public class ReflectionCacheAttribute : Attribute
+    internal class ReflectionCacheAttribute : Attribute
     {
         /// <summary>
         /// Type
