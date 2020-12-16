@@ -112,8 +112,6 @@ namespace Neo.Compiler
                 }
 
                 funcsign["returntype"] = rtype;
-                // MONOREPO PATCH
-                funcsign["safe"] = false;
             }
 
             //events
