@@ -6,11 +6,12 @@ if ($currentBranch -ne $branch) {
     throw "wrong branch $branch"
 }
 
-# vm project switched to .net 5 after a14b934f5b5c8779164e3b96b276984b3a57ccd4
+# vm project tagged preview 4 at 27dd6758291cf6cf64390598707f98faac3845c0
+# core project tagged preview 4 at 414dab140025f46898a3afee3a59a4e18b72d2b2
 # exclude from subtree pull for now
-$projects = "core","devpack","modules","node" #,"vm"
+$projects = "core","devpack","modules"#,"node" ,"vm"
 
-git fetch --all
+git fetch --all --tags
 foreach ($prj in $projects) {
     git subtree pull --prefix $prj "official-$prj" $branch --squash
 }
