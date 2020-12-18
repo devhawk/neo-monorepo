@@ -6,18 +6,18 @@ $currentBranch = git symbolic-ref -q --short HEAD 2> $null
 #     throw "wrong branch $branch"
 # }
 
-# vm tagged preview 4 @ 27dd6758291cf6cf64390598707f98faac3845c0
-# core tagged preview 4 @ 414dab140025f46898a3afee3a59a4e18b72d2b2
+# vm      tagged preview 4 @ 27dd6758291cf6cf64390598707f98faac3845c0
+# core    tagged preview 4 @ 414dab140025f46898a3afee3a59a4e18b72d2b2
 # devpack tagged preview 4 @ b8e0b96a5206d657e69ccd868da8d7a490ef4775
 # modules tagged preview 4 @ 78e30fd7d12fdecfca73f491a35ead6a7460d832
-# exclude node for now
+# node    tagged preview 4 @ 5809bd5998c9ca56b723629742d057433b51a65d
 
 $projects = @{ 
     core = "414dab140025f46898a3afee3a59a4e18b72d2b2"; 
     vm = "27dd6758291cf6cf64390598707f98faac3845c0"; 
     devpack = "b8e0b96a5206d657e69ccd868da8d7a490ef4775";
     modules = "78e30fd7d12fdecfca73f491a35ead6a7460d832";
-    # node = "master" 
+    node = "5809bd5998c9ca56b723629742d057433b51a65d" 
     }
 
 git fetch --all
