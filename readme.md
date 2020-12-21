@@ -28,7 +28,15 @@ intra-repo package references. Same for `preview-2` and `monorepo-preview2`.
 
 ## NuGet Feed
 
-[![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.json)](https://neomonorepopackages.blob.core.windows.net/packages/index.json)
+| Package | Latest Version | 
+| ------- | -------------- |
+| Neo     | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.json)
+| Neo VM  | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.vm.json)
+| Neon    | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.neon.json)
+| Smart Contract Framework | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.smartcontract.framework.json)
+| ApplicationLogs | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.plugins.applicationlogs.json)
+| RpcClient | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.network.rpc.rpcclient.json)
+| RpcServer | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.plugins.rpcserver.json)
 
 This repo now has a NuGet package feed at https://neomonorepopackages.blob.core.windows.net/packages/index.json.
 Packages in this feed all have a package version suffix following this pattern: "mono-*branch*-*git rev-list count*".
@@ -49,6 +57,19 @@ update the generated nuget.config file to include this package feed.
   </packageSources>
 </configuration>
 ```
+
+### Preview 4
+
+Neo 3 preview 4 has been tagged in all five repos that feed into this mono repo. This repo has a preview 4 branch
+that merges the contents of those repos at the preview 4 tag. There is no associated monorepo-preview4 branch.
+
+As of 2020-12-18, Preview 4 NuGet packages have been published on nuget.org for
+[Neo](https://www.nuget.org/packages/Neo/3.0.0-preview4), [NeoVM](https://www.nuget.org/packages/Neo.VM/) and 
+[Neo SmartContract Framework](https://www.nuget.org/packages/Neo.SmartContract.Framework/3.0.0-preview4).
+Other preview 4 packages needed for development (NEON + modules) are hosted on the monorepo feed described above.
+To distinguish these packages from official packages, monorepo preview 4 packages carry the `preview4-mono` 
+suffix. Official packages have the suffix `preview4`. If and when offiical packages for NEON and Neo Modules are 
+published on nuget, the associated mono repo preview 4 packages will be removed.
 
 ## Setup
 
