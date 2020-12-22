@@ -5,7 +5,6 @@
     <AssemblyTitle>Neo.CLI</AssemblyTitle>
     <Version>3.0.0-preview4</Version>
     <Authors>The Neo Project</Authors>
-    <!-- MONOREPO PATCH TargetFramework -->
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>neo-cli</AssemblyName>
     <OutputType>Exe</OutputType>
