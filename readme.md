@@ -64,9 +64,10 @@ Neo 3 preview 4 has been tagged in all five repos that feed into this mono repo.
 that merges the contents of those repos at the preview 4 tag. There is no associated monorepo-preview4 branch.
 
 As of 2020-12-18, Preview 4 NuGet packages have been published on nuget.org for
-[Neo](https://www.nuget.org/packages/Neo/3.0.0-preview4), [NeoVM](https://www.nuget.org/packages/Neo.VM/) and 
+[Neo](https://www.nuget.org/packages/Neo/3.0.0-preview4), [NeoVM](https://www.nuget.org/packages/Neo.VM/), 
+[NEON](https://www.nuget.org/packages/Neo.Neon/3.0.0-preview4) and 
 [Neo SmartContract Framework](https://www.nuget.org/packages/Neo.SmartContract.Framework/3.0.0-preview4).
-Other preview 4 packages needed for development (NEON + modules) are hosted on the monorepo feed described above.
+Other preview 4 packages needed for development (modules) are hosted on the monorepo feed described above.
 To distinguish these packages from official packages, monorepo preview 4 packages carry the `preview4-mono` 
 suffix. Official packages have the suffix `preview4`. If and when offiical packages for NEON and Neo Modules are 
 published on nuget, the associated mono repo preview 4 packages will be removed.
