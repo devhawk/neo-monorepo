@@ -14,6 +14,7 @@ foreach ($prj in $projects) {
 }
 
 if ($merge) {
+    git push
     git checkout "monorepo-$branch"
     git merge $branch
 }
