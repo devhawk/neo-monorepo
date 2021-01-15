@@ -2,7 +2,6 @@
 
 using Neo.Cryptography;
 using Neo.IO;
-using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Persistence;
 using Neo.VM;
@@ -51,6 +50,11 @@ namespace Neo.SmartContract.Native
                     engine.Snapshot.Storages.Delete(key2);
                 Burn(engine, CreateStorageKey(Prefix_Token).Add(key.Key.AsSpan(5)));
             }
+        }
+
+        protected override void OnTransferred(ApplicationEngine engine, UInt160 from, NameState token)
+        {
+            token.Admin = null;
         }
 
         protected override byte[] GetKey(byte[] tokenId)
@@ -243,11 +247,11 @@ namespace Neo.SmartContract.Native
 
             public override byte[] Id => Utility.StrictUTF8.GetBytes(Name);
 
-            public override JObject ToJson()
+            public override Map ToMap(ReferenceCounter referenceCounter)
             {
-                JObject json = base.ToJson();
-                json["expiration"] = Expiration;
-                return json;
+                Map map = base.ToMap(referenceCounter);
+                map["expiration"] = Expiration;
+                return map;
             }
 
             public override void FromStackItem(StackItem stackItem)
