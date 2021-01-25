@@ -121,7 +121,8 @@ namespace Neo.Plugins
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
             JObject account = new JObject();
-            account["networkfee"] = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
+            long networkfee = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
+            account["networkfee"] = new BigDecimal(new BigInteger(networkfee), NativeContract.GAS.Decimals).ToString();
             return account;
         }
 
@@ -360,7 +361,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);
             json["state"] = engine.Execute();
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
+            json["gasconsumed"] = new BigDecimal(new BigInteger(engine.GasConsumed), NativeContract.GAS.Decimals).ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
