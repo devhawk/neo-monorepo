@@ -7,11 +7,11 @@ if ($currentBranch -ne $branch) {
 }
 
 $projects = @{
-    core = "604541c91b3151ee40a8613cb8534ebc0540fd27";
+    core = "v3.0.0-preview5";
     devpack = "4902638e16f2cfa9df0e75776b3f83b4197a3601";
-    modules = "cc8c218163dd3c86c23dfa7e8b6adc411c4d545c";
-    node = "6389ab70592c5188a1bb88a5ce8aa8084a144cc5";
-    vm = "f1aff0d89cda2580371521b3323f310155150655"
+    modules = "v3.0.0-preview5";
+    node = "v3.0.0-preview5";
+    vm = "v3.0.0-preview5"
 }
 
 git fetch --all
