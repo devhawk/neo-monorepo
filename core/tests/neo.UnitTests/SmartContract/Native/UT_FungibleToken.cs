@@ -1,7 +1,6 @@
 using Akka.TestKit.Xunit2;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Ledger;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using System;
@@ -12,12 +11,6 @@ namespace Neo.UnitTests.SmartContract.Native
     [TestClass]
     public class UT_FungibleToken : TestKit
     {
-        [TestInitialize]
-        public void TestSetup()
-        {
-            TestBlockchain.InitializeMockNeoSystem();
-        }
-
         protected const byte Prefix_TotalSupply = 11;
         private static readonly TestNep17Token test = new TestNep17Token();
 
@@ -30,7 +23,7 @@ namespace Neo.UnitTests.SmartContract.Native
         [TestMethod]
         public void TestTotalSupply()
         {
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = TestBlockchain.GetTestSnapshot();
 
             StorageItem item = new StorageItem
             {
@@ -47,7 +40,7 @@ namespace Neo.UnitTests.SmartContract.Native
         [TestMethod]
         public void TestTotalSupplyDecimal()
         {
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = TestBlockchain.GetTestSnapshot();
 
             BigInteger totalSupply = 100_000_000;
             totalSupply *= test.Factor;
