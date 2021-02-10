@@ -1,7 +1,6 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.IO;
-using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -20,10 +19,9 @@ namespace Neo.UnitTests.SmartContract.Native
         [TestInitialize]
         public void TestSetup()
         {
-            TestBlockchain.InitializeMockNeoSystem();
-            _snapshot = Blockchain.Singleton.GetSnapshot();
+            _snapshot = TestBlockchain.GetTestSnapshot();
 
-            ApplicationEngine engine = ApplicationEngine.Create(TriggerType.OnPersist, null, _snapshot, new Block(), 0);
+            ApplicationEngine engine = ApplicationEngine.Create(TriggerType.OnPersist, null, _snapshot, new Block { Header = new Header() }, settings: TestBlockchain.TheNeoSystem.Settings, gas: 0);
             NativeContract.ContractManagement.OnPersist(engine);
         }
 
@@ -56,7 +54,14 @@ namespace Neo.UnitTests.SmartContract.Native
 
             // Fake blockchain
 
-            Block block = new Block() { Index = 1000, PrevHash = UInt256.Zero };
+            Block block = new Block()
+            {
+                Header = new Header
+                {
+                    Index = 1000,
+                    PrevHash = UInt256.Zero
+                }
+            };
             UInt160 committeeMultiSigAddr = NativeContract.NEO.GetCommitteeAddress(snapshot);
 
             // Without signature
@@ -87,7 +92,7 @@ namespace Neo.UnitTests.SmartContract.Native
 
             ret = NativeContract.Policy.Call(snapshot, new Nep17NativeContractExtensions.ManualWitness(committeeMultiSigAddr), block,
                 "setMaxBlockSize", new ContractParameter(ContractParameterType.Integer) { Value = 1024 });
-            ret.Should().BeNull();
+            ret.IsNull.Should().BeTrue();
 
             ret = NativeContract.Policy.Call(snapshot, "getMaxBlockSize");
             ret.Should().BeOfType<VM.Types.Integer>();
@@ -101,7 +106,14 @@ namespace Neo.UnitTests.SmartContract.Native
 
             // Fake blockchain
 
-            Block block = new Block() { Index = 1000, PrevHash = UInt256.Zero };
+            Block block = new Block()
+            {
+                Header = new Header
+                {
+                    Index = 1000,
+                    PrevHash = UInt256.Zero
+                }
+            };
             UInt160 committeeMultiSigAddr = NativeContract.NEO.GetCommitteeAddress(snapshot);
 
             // Without signature
@@ -132,7 +144,7 @@ namespace Neo.UnitTests.SmartContract.Native
 
             ret = NativeContract.Policy.Call(snapshot, new Nep17NativeContractExtensions.ManualWitness(committeeMultiSigAddr), block,
                 "setMaxBlockSystemFee", new ContractParameter(ContractParameterType.Integer) { Value = 1024 * (long)NativeContract.GAS.Factor });
-            ret.Should().BeNull();
+            ret.IsNull.Should().BeTrue();
 
             ret = NativeContract.Policy.Call(snapshot, "getMaxBlockSystemFee");
             ret.Should().BeOfType<VM.Types.Integer>();
@@ -146,7 +158,14 @@ namespace Neo.UnitTests.SmartContract.Native
 
             // Fake blockchain
 
-            Block block = new Block() { Index = 1000, PrevHash = UInt256.Zero };
+            Block block = new Block()
+            {
+                Header = new Header
+                {
+                    Index = 1000,
+                    PrevHash = UInt256.Zero
+                }
+            };
 
             // Without signature
 
@@ -164,7 +183,7 @@ namespace Neo.UnitTests.SmartContract.Native
 
             ret = NativeContract.Policy.Call(snapshot, new Nep17NativeContractExtensions.ManualWitness(NativeContract.NEO.GetCommitteeAddress(snapshot)), block,
                 "setMaxTransactionsPerBlock", new ContractParameter(ContractParameterType.Integer) { Value = 1 });
-            ret.Should().BeNull();
+            ret.IsNull.Should().BeTrue();
 
             ret = NativeContract.Policy.Call(snapshot, "getMaxTransactionsPerBlock");
             ret.Should().BeOfType<VM.Types.Integer>();
@@ -178,7 +197,14 @@ namespace Neo.UnitTests.SmartContract.Native
 
             // Fake blockchain
 
-            Block block = new Block() { Index = 1000, PrevHash = UInt256.Zero };
+            Block block = new Block()
+            {
+                Header = new Header
+                {
+                    Index = 1000,
+                    PrevHash = UInt256.Zero
+                }
+            };
 
             // Without signature
 
@@ -196,7 +222,7 @@ namespace Neo.UnitTests.SmartContract.Native
             UInt160 committeeMultiSigAddr = NativeContract.NEO.GetCommitteeAddress(snapshot);
             ret = NativeContract.Policy.Call(snapshot, new Nep17NativeContractExtensions.ManualWitness(committeeMultiSigAddr), block,
                 "setFeePerByte", new ContractParameter(ContractParameterType.Integer) { Value = 1 });
-            ret.Should().BeNull();
+            ret.IsNull.Should().BeTrue();
 
             ret = NativeContract.Policy.Call(snapshot, "getFeePerByte");
             ret.Should().BeOfType<VM.Types.Integer>();
@@ -210,7 +236,14 @@ namespace Neo.UnitTests.SmartContract.Native
 
             // Fake blockchain
 
-            Block block = new Block() { Index = 1000, PrevHash = UInt256.Zero };
+            Block block = new Block()
+            {
+                Header = new Header
+                {
+                    Index = 1000,
+                    PrevHash = UInt256.Zero
+                }
+            };
 
             // Without signature
 
@@ -239,7 +272,7 @@ namespace Neo.UnitTests.SmartContract.Native
             // Proper set
             ret = NativeContract.Policy.Call(snapshot, new Nep17NativeContractExtensions.ManualWitness(committeeMultiSigAddr), block,
                 "setExecFeeFactor", new ContractParameter(ContractParameterType.Integer) { Value = 50 });
-            ret.Should().BeNull();
+            ret.IsNull.Should().BeTrue();
 
             ret = NativeContract.Policy.Call(snapshot, "getExecFeeFactor");
             ret.Should().BeOfType<VM.Types.Integer>();
@@ -253,7 +286,14 @@ namespace Neo.UnitTests.SmartContract.Native
 
             // Fake blockchain
 
-            Block block = new Block() { Index = 1000, PrevHash = UInt256.Zero };
+            Block block = new Block()
+            {
+                Header = new Header
+                {
+                    Index = 1000,
+                    PrevHash = UInt256.Zero
+                }
+            };
 
             // Without signature
 
@@ -282,7 +322,7 @@ namespace Neo.UnitTests.SmartContract.Native
             // Proper set
             ret = NativeContract.Policy.Call(snapshot, new Nep17NativeContractExtensions.ManualWitness(committeeMultiSigAddr), block,
                 "setStoragePrice", new ContractParameter(ContractParameterType.Integer) { Value = 300300 });
-            ret.Should().BeNull();
+            ret.IsNull.Should().BeTrue();
 
             ret = NativeContract.Policy.Call(snapshot, "getStoragePrice");
             ret.Should().BeOfType<VM.Types.Integer>();
@@ -296,7 +336,14 @@ namespace Neo.UnitTests.SmartContract.Native
 
             // Fake blockchain
 
-            Block block = new Block() { Index = 1000, PrevHash = UInt256.Zero };
+            Block block = new Block()
+            {
+                Header = new Header
+                {
+                    Index = 1000,
+                    PrevHash = UInt256.Zero
+                }
+            };
 
             // Without signature
 
@@ -345,7 +392,14 @@ namespace Neo.UnitTests.SmartContract.Native
 
             // Fake blockchain
 
-            Block block = new Block() { Index = 1000, PrevHash = UInt256.Zero };
+            Block block = new Block()
+            {
+                Header = new Header
+                {
+                    Index = 1000,
+                    PrevHash = UInt256.Zero
+                }
+            };
             UInt160 committeeMultiSigAddr = NativeContract.NEO.GetCommitteeAddress(snapshot);
 
             // Block without signature

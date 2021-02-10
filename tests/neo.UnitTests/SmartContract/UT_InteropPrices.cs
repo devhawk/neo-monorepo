@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Ledger;
 using Neo.SmartContract;
 using Neo.UnitTests.Extensions;
 using Neo.VM;
@@ -10,18 +9,12 @@ namespace Neo.UnitTests.SmartContract
     [TestClass]
     public class UT_InteropPrices
     {
-        [TestInitialize]
-        public void Initialize()
-        {
-            TestBlockchain.InitializeMockNeoSystem();
-        }
-
         [TestMethod]
         public void ApplicationEngineFixedPrices()
         {
             // System.Runtime.CheckWitness: f827ec8c (price is 200)
             byte[] SyscallSystemRuntimeCheckWitnessHash = new byte[] { 0x68, 0xf8, 0x27, 0xec, 0x8c };
-            using (ApplicationEngine ae = ApplicationEngine.Create(TriggerType.Application, null, null, null, 0))
+            using (ApplicationEngine ae = ApplicationEngine.Create(TriggerType.Application, null, null, gas: 0))
             {
                 ae.LoadScript(SyscallSystemRuntimeCheckWitnessHash);
                 ApplicationEngine.System_Runtime_CheckWitness.FixedPrice.Should().Be(0_00001024L);
@@ -29,7 +22,7 @@ namespace Neo.UnitTests.SmartContract
 
             // System.Storage.GetContext: 9bf667ce (price is 1)
             byte[] SyscallSystemStorageGetContextHash = new byte[] { 0x68, 0x9b, 0xf6, 0x67, 0xce };
-            using (ApplicationEngine ae = ApplicationEngine.Create(TriggerType.Application, null, null, null, 0))
+            using (ApplicationEngine ae = ApplicationEngine.Create(TriggerType.Application, null, null, gas: 0))
             {
                 ae.LoadScript(SyscallSystemStorageGetContextHash);
                 ApplicationEngine.System_Storage_GetContext.FixedPrice.Should().Be(0_00000016L);
@@ -37,7 +30,7 @@ namespace Neo.UnitTests.SmartContract
 
             // System.Storage.Get: 925de831 (price is 100)
             byte[] SyscallSystemStorageGetHash = new byte[] { 0x68, 0x92, 0x5d, 0xe8, 0x31 };
-            using (ApplicationEngine ae = ApplicationEngine.Create(TriggerType.Application, null, null, null, 0))
+            using (ApplicationEngine ae = ApplicationEngine.Create(TriggerType.Application, null, null, gas: 0))
             {
                 ae.LoadScript(SyscallSystemStorageGetHash);
                 ApplicationEngine.System_Storage_Get.FixedPrice.Should().Be(32768L);
@@ -60,7 +53,7 @@ namespace Neo.UnitTests.SmartContract
             StorageKey skey = TestUtils.GetStorageKey(contractState.Id, key);
             StorageItem sItem = TestUtils.GetStorageItem(new byte[0] { });
 
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = TestBlockchain.GetTestSnapshot();
             snapshot.Add(skey, sItem);
             snapshot.AddContract(script.ToScriptHash(), contractState);
 
@@ -93,7 +86,7 @@ namespace Neo.UnitTests.SmartContract
             StorageKey skey = TestUtils.GetStorageKey(contractState.Id, key);
             StorageItem sItem = TestUtils.GetStorageItem(value);
 
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = TestBlockchain.GetTestSnapshot();
             snapshot.Add(skey, sItem);
             snapshot.AddContract(script.ToScriptHash(), contractState);
 
@@ -128,7 +121,7 @@ namespace Neo.UnitTests.SmartContract
             StorageKey skey = TestUtils.GetStorageKey(contractState.Id, key);
             StorageItem sItem = TestUtils.GetStorageItem(oldValue);
 
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = TestBlockchain.GetTestSnapshot();
             snapshot.Add(skey, sItem);
             snapshot.AddContract(script.ToScriptHash(), contractState);
 
@@ -164,7 +157,7 @@ namespace Neo.UnitTests.SmartContract
             StorageKey skey = TestUtils.GetStorageKey(contractState.Id, key);
             StorageItem sItem = TestUtils.GetStorageItem(oldValue);
 
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = TestBlockchain.GetTestSnapshot();
             snapshot.Add(skey, sItem);
             snapshot.AddContract(script.ToScriptHash(), contractState);
 
