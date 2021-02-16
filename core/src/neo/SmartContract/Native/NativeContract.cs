@@ -103,8 +103,6 @@ namespace Neo.SmartContract.Native
 
         internal void Invoke(ApplicationEngine engine, byte version)
         {
-            if (engine.ProtocolSettings.GetNativeActivation(Name) > Ledger.CurrentIndex(engine.Snapshot))
-                throw new InvalidOperationException($"The native contract {Name} is not active.");
             if (version != 0)
                 throw new InvalidOperationException($"The native contract of version {version} is not active.");
             ExecutionContext context = engine.CurrentContext;
@@ -112,7 +110,7 @@ namespace Neo.SmartContract.Native
             ExecutionContextState state = context.GetState<ExecutionContextState>();
             if (!state.CallFlags.HasFlag(method.RequiredCallFlags))
                 throw new InvalidOperationException($"Cannot call this method with the flag {state.CallFlags}.");
-            engine.AddGas(method.Price);
+            engine.AddGas(method.CpuFee * Policy.GetExecFeeFactor(engine.Snapshot) + method.StorageFee * Policy.GetStoragePrice(engine.Snapshot));
             List<object> parameters = new List<object>();
             if (method.NeedApplicationEngine) parameters.Add(engine);
             if (method.NeedSnapshot) parameters.Add(engine.Snapshot);
