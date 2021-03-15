@@ -27,12 +27,12 @@ namespace Neo.Ledger
         public class FillCompleted { }
         public class Reverify { public IInventory[] Inventories; }
         public class RelayResult { public IInventory Inventory; public VerifyResult Result; }
+        internal class Initialize { }
         private class UnverifiedBlocksList { public LinkedList<Block> Blocks = new LinkedList<Block>(); public HashSet<IActorRef> Nodes = new HashSet<IActorRef>(); }
 
         private readonly static Script onPersistScript, postPersistScript;
         private const int MaxTxToReverifyPerIdle = 10;
         private readonly NeoSystem system;
-        private readonly IActorRef txrouter;
         private readonly Dictionary<UInt256, Block> block_cache = new Dictionary<UInt256, Block>();
         private readonly Dictionary<uint, UnverifiedBlocksList> block_cache_unverified = new Dictionary<uint, UnverifiedBlocksList>();
         private ImmutableHashSet<UInt160> extensibleWitnessWhiteList;
@@ -54,15 +54,6 @@ namespace Neo.Ledger
         public Blockchain(NeoSystem system)
         {
             this.system = system;
-            this.txrouter = Context.ActorOf(TransactionRouter.Props(system));
-            if (!NativeContract.Ledger.Initialized(system.StoreView))
-                Persist(system.GenesisBlock);
-        }
-
-        private bool ContainsTransaction(UInt256 hash)
-        {
-            if (system.MemPool.ContainsKey(hash)) return true;
-            return NativeContract.Ledger.ContainsTransaction(system.StoreView, hash);
         }
 
         private void OnImport(IEnumerable<Block> blocks, bool verify)
@@ -130,6 +121,13 @@ namespace Neo.Ledger
             // Transactions originally in the pool will automatically be reverified based on their priority.
 
             Sender.Tell(new FillCompleted());
+        }
+
+        private void OnInitialize()
+        {
+            if (!NativeContract.Ledger.Initialized(system.StoreView))
+                Persist(system.GenesisBlock);
+            Sender.Tell(new object());
         }
 
         private void OnInventory(IInventory inventory, bool relay = true)
@@ -241,7 +239,7 @@ namespace Neo.Ledger
 
         private VerifyResult OnNewTransaction(Transaction transaction)
         {
-            if (ContainsTransaction(transaction.Hash)) return VerifyResult.AlreadyExists;
+            if (system.ContainsTransaction(transaction.Hash)) return VerifyResult.AlreadyExists;
             return system.MemPool.TryAdd(transaction, system.StoreView);
         }
 
@@ -257,6 +255,9 @@ namespace Neo.Ledger
         {
             switch (message)
             {
+                case Initialize:
+                    OnInitialize();
+                    break;
                 case Import import:
                     OnImport(import.Blocks, import.Verify);
                     break;
@@ -291,10 +292,10 @@ namespace Neo.Ledger
 
         private void OnTransaction(Transaction tx)
         {
-            if (ContainsTransaction(tx.Hash))
+            if (system.ContainsTransaction(tx.Hash))
                 SendRelayResult(tx, VerifyResult.AlreadyExists);
             else
-                txrouter.Forward(new TransactionRouter.Preverify(tx, true));
+                system.TxRouter.Forward(new TransactionRouter.Preverify(tx, true));
         }
 
         private void Persist(Block block)
