@@ -14,6 +14,13 @@ namespace Neo.Consensus
         private NeoSystem neoSystem;
         private Settings settings;
 
+        public DBFTPlugin() { }
+
+        public DBFTPlugin(Settings settings)
+        {
+            this.settings = settings;
+        }
+
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
         public DBFTPlugin() { }
@@ -64,7 +71,7 @@ namespace Neo.Consensus
         {
             if (started) return;
             started = true;
-            consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, this.settings, wallet));
+            consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, settings, wallet));
             consensus.Tell(new ConsensusService.Start());
         }
 
