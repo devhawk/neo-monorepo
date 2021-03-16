@@ -23,13 +23,6 @@ namespace Neo.Consensus
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
-        public DBFTPlugin() { }
-
-        public DBFTPlugin(Settings settings)
-        {
-            this.settings = settings;
-        }
-
         protected override void Configure()
         {
             if (settings == null) settings = new Settings(GetConfiguration());
