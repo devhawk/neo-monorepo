@@ -32,8 +32,10 @@ intra-repo package references. Same for `preview-2` and `monorepo-preview2`.
 | ------- | -------------- |
 | Neo     | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.json)
 | Neo VM  | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.vm.json)
-| NEON    | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.neon.json)
-| Smart Contract Framework | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.smartcontract.framework.json)
+| Neo.Compiler.CSharp (aka NCCS) | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.compiler.csharp.json)
+| Smart Contract Framework for NCCS | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.smartcontract.framework.json)
+| Neo.Compiler.MSIL (aka NEON) | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.neon.json)
+| Smart Contract Framework for NEON | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.neon.smartcontract.framework.json)
 | ApplicationLogs | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.plugins.applicationlogs.json)
 | Consensus.DBFT  | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.consensus.dbft.json)
 | RpcClient | ![](https://img.shields.io/endpoint?label=NuGet&logo=nuget&url=https%3A%2F%2Fneomonorepopackages.blob.core.windows.net%2Fpackages%2Fbadges%2Fvpre%2Fneo.network.rpc.rpcclient.json)
