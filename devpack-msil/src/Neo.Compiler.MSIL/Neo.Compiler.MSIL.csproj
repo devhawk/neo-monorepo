@@ -41,7 +41,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="3.9.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
-    <PackageReference Include="Neo" Version="3.0.0-CI01251" />
   </ItemGroup>
 
   <ItemGroup>
@@ -54,5 +53,6 @@
         -->
       <Aliases>scfx</Aliases>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\core\src\neo\neo.csproj" />
   </ItemGroup>
 </Project>
