@@ -62,19 +62,21 @@ update the generated nuget.config file to include this package feed.
 </configuration>
 ```
 
-### Preview 4
+### `NEON` and `NCCS` Smart Contract Compilers
 
-Neo 3 preview 4 has been tagged in all five repos that feed into this mono repo. This repo has a preview 4 branch
-that merges the contents of those repos at the preview 4 tag. There is no associated monorepo-preview4 branch.
+After Neo N3 Release Candidate 1, the Neo Project introduced a [new smart contract compiler](https://github.com/neo-project/neo-devpack-dotnet/tree/master/src/Neo.Compiler.CSharp)
+named `nccs`. `neon`, the original .NET smart contract compiler was deprecated at the same time. For support purposes, 
+a new [`msil` branch](https://github.com/neo-project/neo-devpack-dotnet/tree/msil) was created to track any post-RC1 changes 
+needed for the `neon` compiler.
 
-As of 2020-12-18, Preview 4 NuGet packages have been published on nuget.org for
-[Neo](https://www.nuget.org/packages/Neo/3.0.0-preview4), [NeoVM](https://www.nuget.org/packages/Neo.VM/), 
-[NEON](https://www.nuget.org/packages/Neo.Neon/3.0.0-preview4) and 
-[Neo SmartContract Framework](https://www.nuget.org/packages/Neo.SmartContract.Framework/3.0.0-preview4).
-Other preview 4 packages needed for development (modules) are hosted on the monorepo feed described above.
-To distinguish these packages from official packages, monorepo preview 4 packages carry the `preview4-mono` 
-suffix. Official packages have the suffix `preview4`. If and when offiical packages for NEON and Neo Modules are 
-published on nuget, the associated mono repo preview 4 packages will be removed.
+In order to help developers transition from `neon` to `nccs`, this monorepo includes both `master` and `msil` branches from the 
+[devpack-dotnet repo](https://github.com/neo-project/neo-devpack-dotnet). In this repo, the `msil` branch version of the 
+`Neo.SmartContract.Framework` package has been renamed to `Neo.Neon.SmartContract.Framework`. RC2 compatible versions of `Neo.Neon`
+and `Neo.Neon.SmartContract.Framework` will be published in the [monorepo NuGet feed](https://github.com/devhawk/neo-monorepo#nuget-feed).
+
+**Note**: the `neon` compiler will *NOT* be updated for final release of Neo N3. `neon` will only be maintained thru
+the Neo N3 release candidate process to enable developers time to migrate their contracts to the new compiler. 
+Further details on installing the RC2 compatible compilers and migrating from `neon` to `nccs` will be available when RC2 ships.
 
 ## Setup
 
@@ -122,3 +124,6 @@ git subtree pull --prefix modules official-modules master --squash
 git subtree pull --prefix devpack official-devpack master --squash
 git subtree pull --prefix node official-node master --squash
 ```
+
+Once I update the `master` branch, I merge those changes into the `monorepo-master` branch,
+manually fixing up any changes to project files.
