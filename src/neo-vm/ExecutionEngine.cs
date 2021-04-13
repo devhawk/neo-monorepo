@@ -36,12 +36,12 @@ namespace Neo.VM
         /// <summary>
         /// The top frame of the invocation stack.
         /// </summary>
-        public ExecutionContext CurrentContext { get; private set; }
+        public ExecutionContext? CurrentContext { get; private set; }
 
         /// <summary>
         /// The bottom frame of the invocation stack.
         /// </summary>
-        public ExecutionContext EntryContext { get; private set; }
+        public ExecutionContext? EntryContext { get; private set; }
 
         /// <summary>
         /// The stack to store the return values.
@@ -51,7 +51,7 @@ namespace Neo.VM
         /// <summary>
         /// The VM object representing the uncaught exception.
         /// </summary>
-        public StackItem UncaughtException { get; private set; }
+        public StackItem? UncaughtException { get; private set; }
 
         /// <summary>
         /// The current state of the VM.
@@ -135,12 +135,12 @@ namespace Neo.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ExecuteCall(int position)
         {
-            LoadContext(CurrentContext.Clone(position));
+            LoadContext(CurrentContext!.Clone(position));
         }
 
         private void ExecuteInstruction()
         {
-            Instruction instruction = CurrentContext.CurrentInstruction;
+            Instruction instruction = CurrentContext!.CurrentInstruction;
             switch (instruction.OpCode)
             {
                 //Push
@@ -399,7 +399,7 @@ namespace Neo.VM
                     {
                         if (CurrentContext.TryStack is null)
                             throw new InvalidOperationException($"The corresponding TRY block cannot be found.");
-                        if (!CurrentContext.TryStack.TryPop(out ExceptionHandlingContext currentTry))
+                        if (!CurrentContext.TryStack.TryPop(out ExceptionHandlingContext? currentTry))
                             throw new InvalidOperationException($"The corresponding TRY block cannot be found.");
 
                         if (UncaughtException is null)
@@ -915,30 +915,42 @@ namespace Neo.VM
                     }
                 case OpCode.LT:
                     {
-                        var x2 = Pop().GetInteger();
-                        var x1 = Pop().GetInteger();
-                        Push(x1 < x2);
+                        var x2 = Pop();
+                        var x1 = Pop();
+                        if (x1.IsNull || x2.IsNull)
+                            Push(false);
+                        else
+                            Push(x1.GetInteger() < x2.GetInteger());
                         break;
                     }
                 case OpCode.LE:
                     {
-                        var x2 = Pop().GetInteger();
-                        var x1 = Pop().GetInteger();
-                        Push(x1 <= x2);
+                        var x2 = Pop();
+                        var x1 = Pop();
+                        if (x1.IsNull || x2.IsNull)
+                            Push(false);
+                        else
+                            Push(x1.GetInteger() <= x2.GetInteger());
                         break;
                     }
                 case OpCode.GT:
                     {
-                        var x2 = Pop().GetInteger();
-                        var x1 = Pop().GetInteger();
-                        Push(x1 > x2);
+                        var x2 = Pop();
+                        var x1 = Pop();
+                        if (x1.IsNull || x2.IsNull)
+                            Push(false);
+                        else
+                            Push(x1.GetInteger() > x2.GetInteger());
                         break;
                     }
                 case OpCode.GE:
                     {
-                        var x2 = Pop().GetInteger();
-                        var x1 = Pop().GetInteger();
-                        Push(x1 >= x2);
+                        var x2 = Pop();
+                        var x1 = Pop();
+                        if (x1.IsNull || x2.IsNull)
+                            Push(false);
+                        else
+                            Push(x1.GetInteger() >= x2.GetInteger());
                         break;
                     }
                 case OpCode.MIN:
@@ -1139,7 +1151,7 @@ namespace Neo.VM
                                 }
                             case Map map:
                                 {
-                                    if (!map.TryGetValue(key, out StackItem value))
+                                    if (!map.TryGetValue(key, out StackItem? value))
                                         throw new InvalidOperationException($"Key not found in {nameof(Map)}");
                                     Push(value);
                                     break;
@@ -1294,9 +1306,9 @@ namespace Neo.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ExecuteEndTry(int endOffset)
         {
-            if (CurrentContext.TryStack is null)
+            if (CurrentContext!.TryStack is null)
                 throw new InvalidOperationException($"The corresponding TRY block cannot be found.");
-            if (!CurrentContext.TryStack.TryPeek(out ExceptionHandlingContext currentTry))
+            if (!CurrentContext.TryStack.TryPeek(out ExceptionHandlingContext? currentTry))
                 throw new InvalidOperationException($"The corresponding TRY block cannot be found.");
             if (currentTry.State == ExceptionHandlingState.Finally)
                 throw new InvalidOperationException($"The opcode {OpCode.ENDTRY} can't be executed in a FINALLY block.");
@@ -1323,7 +1335,7 @@ namespace Neo.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ExecuteJump(int position)
         {
-            if (position < 0 || position > CurrentContext.Script.Length)
+            if (position < 0 || position > CurrentContext!.Script.Length)
                 throw new ArgumentOutOfRangeException($"Jump out of range for position: {position}");
             CurrentContext.InstructionPointer = position;
             isJumping = true;
@@ -1336,10 +1348,10 @@ namespace Neo.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ExecuteJumpOffset(int offset)
         {
-            ExecuteJump(checked(CurrentContext.InstructionPointer + offset));
+            ExecuteJump(checked(CurrentContext!.InstructionPointer + offset));
         }
 
-        private void ExecuteLoadFromSlot(Slot slot, int index)
+        private void ExecuteLoadFromSlot(Slot? slot, int index)
         {
             if (slot is null)
                 throw new InvalidOperationException("Slot has not been initialized.");
@@ -1361,7 +1373,7 @@ namespace Neo.VM
             {
                 try
                 {
-                    ExecutionContext context = CurrentContext;
+                    ExecutionContext context = CurrentContext!;
                     PreExecuteInstruction();
                     ExecuteInstruction();
                     PostExecuteInstruction();
@@ -1375,7 +1387,7 @@ namespace Neo.VM
             }
         }
 
-        private void ExecuteStoreToSlot(Slot slot, int index)
+        private void ExecuteStoreToSlot(Slot? slot, int index)
         {
             if (slot is null)
                 throw new InvalidOperationException("Slot has not been initialized.");
@@ -1399,7 +1411,7 @@ namespace Neo.VM
         {
             if (catchOffset == 0 && finallyOffset == 0)
                 throw new InvalidOperationException($"catchOffset and finallyOffset can't be 0 in a TRY block");
-            if (CurrentContext.TryStack is null)
+            if (CurrentContext!.TryStack is null)
                 CurrentContext.TryStack = new Stack<ExceptionHandlingContext>();
             else if (CurrentContext.TryStack.Count >= Limits.MaxTryNestingDepth)
                 throw new InvalidOperationException("MaxTryNestingDepth exceed.");
@@ -1429,7 +1441,7 @@ namespace Neo.VM
                         if (tryContext.State == ExceptionHandlingState.Try && tryContext.HasCatch)
                         {
                             tryContext.State = ExceptionHandlingState.Catch;
-                            Push(UncaughtException);
+                            Push(UncaughtException!);
                             executionContext.InstructionPointer = tryContext.CatchPointer;
                             UncaughtException = null;
                         }
@@ -1445,7 +1457,7 @@ namespace Neo.VM
                 ++pop;
             }
 
-            throw new VMUnhandledException(UncaughtException);
+            throw new VMUnhandledException(UncaughtException!);
         }
 
         /// <summary>
@@ -1536,7 +1548,7 @@ namespace Neo.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StackItem Peek(int index = 0)
         {
-            return CurrentContext.EvaluationStack.Peek(index);
+            return CurrentContext!.EvaluationStack.Peek(index);
         }
 
         /// <summary>
@@ -1546,7 +1558,7 @@ namespace Neo.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StackItem Pop()
         {
-            return CurrentContext.EvaluationStack.Pop();
+            return CurrentContext!.EvaluationStack.Pop();
         }
 
         /// <summary>
@@ -1557,7 +1569,7 @@ namespace Neo.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Pop<T>() where T : StackItem
         {
-            return CurrentContext.EvaluationStack.Pop<T>();
+            return CurrentContext!.EvaluationStack.Pop<T>();
         }
 
         /// <summary>
@@ -1581,7 +1593,7 @@ namespace Neo.VM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Push(StackItem item)
         {
-            CurrentContext.EvaluationStack.Push(item);
+            CurrentContext!.EvaluationStack.Push(item);
         }
     }
 }
