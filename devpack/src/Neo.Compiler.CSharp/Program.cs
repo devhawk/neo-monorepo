@@ -101,7 +101,10 @@ namespace Neo.Compiler
                 folder = options.Output ?? Path.Combine(folder, "bin", "sc");
                 Directory.CreateDirectory(folder);
                 string path = Path.Combine(folder, $"{context.ContractName}.nef");
-                File.WriteAllBytes(path, context.CreateExecutable().ToArray());
+                // START MONOREPO PATCH
+                var nefFile = context.CreateExecutable();
+                File.WriteAllBytes(path, nefFile.ToArray());
+                // END MONOREPO PATCH
                 Console.WriteLine($"Created {path}");
                 path = Path.Combine(folder, $"{context.ContractName}.manifest.json");
                 File.WriteAllBytes(path, context.CreateManifest().ToByteArray(false));
@@ -112,7 +115,9 @@ namespace Neo.Compiler
                     using FileStream fs = new(path, FileMode.Create, FileAccess.Write);
                     using ZipArchive archive = new(fs, ZipArchiveMode.Create);
                     using Stream stream = archive.CreateEntry($"{context.ContractName}.debug.json").Open();
-                    stream.Write(context.CreateDebugInformation().ToByteArray(false));
+                    // START MONOREPO PATCH
+                    stream.Write(context.CreateDebugInformation(nefFile).ToByteArray(false));
+                    // END MONOREPO PATCH
                     Console.WriteLine($"Created {path}");
                 }
                 if (options.Assembly)

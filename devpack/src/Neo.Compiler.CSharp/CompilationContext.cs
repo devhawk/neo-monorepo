@@ -259,11 +259,17 @@ namespace Neo.Compiler
             };
         }
 
-        public JObject CreateDebugInformation()
+        public JObject CreateDebugInformation(NefFile nefFile)
         {
+
             SyntaxTree[] trees = compilation.SyntaxTrees.ToArray();
             return new JObject
             {
+                // START MONOREPO PATCH
+                ["hash"] = Neo.Cryptography.Helper.RIPEMD160(
+                    Neo.Cryptography.Helper.Sha256(nefFile.Script))
+                    .ToHexString(),
+                // END MONOREPO PATCH
                 ["documents"] = compilation.SyntaxTrees.Select(p => (JString)p.FilePath).ToArray(),
                 ["methods"] = methodsConverted.Where(p => p.SyntaxNode is not null).Select(m => new JObject
                 {
@@ -276,7 +282,7 @@ namespace Neo.Compiler
                     ["sequence-points"] = m.Instructions.Where(p => p.SourceLocation is not null).Select(p =>
                     {
                         FileLinePositionSpan span = p.SourceLocation!.GetLineSpan();
-                        return (JString)$"{p.Offset}[{Array.IndexOf(trees, p.SourceLocation.SourceTree)}]{span.StartLinePosition.Line}:{span.StartLinePosition.Character}-{span.EndLinePosition.Line}:{span.EndLinePosition.Character}";
+                        return (JString)$"{p.Offset}[{Array.IndexOf<SyntaxTree>(trees, p.SourceLocation.SourceTree)}]{span.StartLinePosition.Line}:{span.StartLinePosition.Character}-{span.EndLinePosition.Line}:{span.EndLinePosition.Character}";
                     }).ToArray()
                 }).ToArray(),
                 ["events"] = eventsExported.Select(e => new JObject
@@ -287,6 +293,7 @@ namespace Neo.Compiler
                 }).ToArray()
             };
         }
+
 
         private void ProcessCompilationUnit(SemanticModel model, CompilationUnitSyntax syntax)
         {
