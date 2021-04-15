@@ -261,14 +261,11 @@ namespace Neo.Compiler
 
         public JObject CreateDebugInformation(NefFile nefFile)
         {
-
             SyntaxTree[] trees = compilation.SyntaxTrees.ToArray();
             return new JObject
             {
                 // START MONOREPO PATCH
-                ["hash"] = Neo.Cryptography.Helper.RIPEMD160(
-                    Neo.Cryptography.Helper.Sha256(nefFile.Script))
-                    .ToHexString(),
+                ["hash"] = Neo.SmartContract.Helper.ToScriptHash(nefFile.Script).ToString(),
                 // END MONOREPO PATCH
                 ["documents"] = compilation.SyntaxTrees.Select(p => (JString)p.FilePath).ToArray(),
                 ["methods"] = methodsConverted.Where(p => p.SyntaxNode is not null).Select(m => new JObject

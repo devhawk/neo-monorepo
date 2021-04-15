@@ -111,14 +111,20 @@ namespace Neo.Compiler
                 Console.WriteLine($"Created {path}");
                 if (options.Debug)
                 {
+                    // START MONOREPO PATCH
+                    var debugInfo = context.CreateDebugInformation(nefFile);
+
                     path = Path.Combine(folder, $"{context.ContractName}.nefdbgnfo");
                     using FileStream fs = new(path, FileMode.Create, FileAccess.Write);
                     using ZipArchive archive = new(fs, ZipArchiveMode.Create);
                     using Stream stream = archive.CreateEntry($"{context.ContractName}.debug.json").Open();
-                    // START MONOREPO PATCH
-                    stream.Write(context.CreateDebugInformation(nefFile).ToByteArray(false));
-                    // END MONOREPO PATCH
+                    stream.Write(debugInfo.ToByteArray(false));
                     Console.WriteLine($"Created {path}");
+
+                    var path2 = Path.Combine(folder, $"{context.ContractName}.debug.json");
+                    File.WriteAllBytes(path2, debugInfo.ToByteArray(true));
+                    Console.WriteLine($"Created {path2}");
+                    // END MONOREPO PATCH
                 }
                 if (options.Assembly)
                 {
