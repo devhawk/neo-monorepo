@@ -98,34 +98,27 @@ namespace Neo.Compiler
             }
             if (context.Success)
             {
+                // START MONOREPO PATCH
+                var nefFile = context.CreateExecutable();
+
                 folder = options.Output ?? Path.Combine(folder, "bin", "sc");
                 Directory.CreateDirectory(folder);
                 string path = Path.Combine(folder, $"{context.ContractName}.nef");
-                // START MONOREPO PATCH
-                var nefFile = context.CreateExecutable();
                 File.WriteAllBytes(path, nefFile.ToArray());
-                // END MONOREPO PATCH
                 Console.WriteLine($"Created {path}");
                 path = Path.Combine(folder, $"{context.ContractName}.manifest.json");
                 File.WriteAllBytes(path, context.CreateManifest().ToByteArray(false));
                 Console.WriteLine($"Created {path}");
                 if (options.Debug)
                 {
-                    // START MONOREPO PATCH
-                    var debugInfo = context.CreateDebugInformation(nefFile);
-
                     path = Path.Combine(folder, $"{context.ContractName}.nefdbgnfo");
                     using FileStream fs = new(path, FileMode.Create, FileAccess.Write);
                     using ZipArchive archive = new(fs, ZipArchiveMode.Create);
                     using Stream stream = archive.CreateEntry($"{context.ContractName}.debug.json").Open();
-                    stream.Write(debugInfo.ToByteArray(false));
+                    stream.Write(context.CreateDebugInformation(nefFile).ToByteArray(false));
                     Console.WriteLine($"Created {path}");
-
-                    var path2 = Path.Combine(folder, $"{context.ContractName}.debug.json");
-                    File.WriteAllBytes(path2, debugInfo.ToByteArray(true));
-                    Console.WriteLine($"Created {path2}");
-                    // END MONOREPO PATCH
                 }
+                // END MONOREPO PATCH
                 if (options.Assembly)
                 {
                     path = Path.Combine(folder, $"{context.ContractName}.asm");

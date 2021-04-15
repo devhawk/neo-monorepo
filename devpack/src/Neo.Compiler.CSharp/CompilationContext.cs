@@ -265,7 +265,7 @@ namespace Neo.Compiler
             return new JObject
             {
                 // START MONOREPO PATCH
-                ["hash"] = Neo.SmartContract.Helper.ToScriptHash(nefFile.Script).ToString(),
+                ["hash"] = nefFile.Script.ToScriptHash().ToString(),
                 // END MONOREPO PATCH
                 ["documents"] = compilation.SyntaxTrees.Select(p => (JString)p.FilePath).ToArray(),
                 ["methods"] = methodsConverted.Where(p => p.SyntaxNode is not null).Select(m => new JObject

@@ -59,7 +59,9 @@ namespace Neo.Compiler.CSharp.UnitTests.Utils
             {
                 Nef = context.CreateExecutable();
                 Manifest = context.CreateManifest();
-                DebugInfo = context.CreateDebugInformation();
+                // START MONOREPO PATCH
+                DebugInfo = context.CreateDebugInformation(Nef);
+                // END MONOREPO PATCH
                 Reset();
             }
             return context;
