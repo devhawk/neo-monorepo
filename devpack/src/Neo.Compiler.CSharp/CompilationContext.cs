@@ -281,7 +281,7 @@ namespace Neo.Compiler
             };
         }
 
-        public JObject CreateDebugInformation(NefFile nefFile)
+        public JObject CreateDebugInformation()
         {
             SyntaxTree[] trees = compilation.SyntaxTrees.ToArray();
             return new JObject
@@ -310,7 +310,6 @@ namespace Neo.Compiler
                 }).ToArray()
             };
         }
-
 
         private void ProcessCompilationUnit(SemanticModel model, CompilationUnitSyntax syntax)
         {
