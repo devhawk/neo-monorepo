@@ -1,0 +1,20 @@
+$ScriptDir = Split-Path $script:MyInvocation.MyCommand.Path
+
+$branch = git -C $ScriptDir symbolic-ref -q --short HEAD
+if ($branch.startswith("monorepo-")) { $branch = "mono-" + $branch.substring(9) }
+$suffix = "$branch-{0:d5}" -f [int](git -C $ScriptDir rev-list --count HEAD)
+echo $suffix
+
+$solutions = 
+    "vm\neo-vm.sln", 
+    "core\neo.sln", 
+    "modules\neo-modules.sln", 
+    "devpack\src\Neo.Compiler.CSharp\Neo.Compiler.CSharp.csproj",
+    "devpack\src\Neo.SmartContract.Framework\Neo.SmartContract.Framework.csproj", 
+    "devpack-msil\src\Neo.Compiler.MSIL\Neo.Compiler.MSIL.csproj",
+    "devpack-msil\src\Neo.SmartContract.Framework\Neo.SmartContract.Framework.csproj"
+
+del .\artifacts\ -Recurse -Force -ErrorAction SilentlyContinue
+$solutions | %{ 
+    dotnet pack -o artifacts --version-suffix $suffix (join-path $ScriptDir $_) 
+}
