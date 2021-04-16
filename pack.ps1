@@ -14,7 +14,7 @@ $solutions =
     "devpack-msil\src\Neo.Compiler.MSIL\Neo.Compiler.MSIL.csproj",
     "devpack-msil\src\Neo.SmartContract.Framework\Neo.SmartContract.Framework.csproj"
 
-del .\artifacts\ -Recurse -Force -ErrorAction SilentlyContinue
+del "$ScriptDir/artifacts" -Recurse -Force -ErrorAction SilentlyContinue
 $solutions | %{ 
-    dotnet pack -o artifacts --version-suffix $suffix (join-path $ScriptDir $_) 
+    dotnet pack -o "$ScriptDir/artifacts" --version-suffix $suffix "$ScriptDir/$_" 
 }
