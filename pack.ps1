@@ -16,5 +16,6 @@ $solutions =
 
 del "$ScriptDir/artifacts" -Recurse -Force -ErrorAction SilentlyContinue
 $solutions | %{ 
+    write-host $_ -ForegroundColor Cyan; 
     dotnet pack -o "$ScriptDir/artifacts" --version-suffix $suffix "$ScriptDir/$_" 
 }
