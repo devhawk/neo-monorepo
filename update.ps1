@@ -19,7 +19,7 @@ write-host devpack-msil -ForegroundColor Cyan;
 git subtree pull --prefix devpack-msil official-devpack msil --squash 
 
 if ($merge) {
-    write-host $"Merging $branch into monorepo-$branch" -ForegroundColor Cyan; 
+    write-host "Merging $branch into monorepo-$branch" -ForegroundColor Cyan; 
     git push
     git checkout "monorepo-$branch"
     git merge $branch
