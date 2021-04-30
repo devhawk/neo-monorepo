@@ -327,7 +327,8 @@ namespace Neo.Plugins
             {
                 Version = 0,
                 Nonce = unchecked((uint)response.Id),
-                ValidUntilBlock = requestTx.BlockIndex + Transaction.MaxValidUntilBlockIncrement,
+                // MONOREPO PATCH
+                ValidUntilBlock = requestTx.BlockIndex + settings.MaxValidUntilBlockIncrement,
                 Signers = new[]
                 {
                     new Signer
