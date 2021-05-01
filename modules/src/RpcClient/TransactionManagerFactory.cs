@@ -35,7 +35,6 @@ namespace Neo.Network.RPC
                 Nonce = (uint)new Random().Next(),
                 Script = script,
                 Signers = signers ?? Array.Empty<Signer>(),
-                // MONOREPO PATCH
                 ValidUntilBlock = blockCount - 1 + rpcClient.protocolSettings.MaxValidUntilBlockIncrement,
                 SystemFee = invokeResult.GasConsumed,
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),

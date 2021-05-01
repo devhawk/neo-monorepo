@@ -41,7 +41,6 @@ namespace Neo.GUI
             ContractParametersContext context;
             try
             {
-                // MONOREPO PATCH
                 context = new ContractParametersContext(Service.NeoSystem.StoreView, tx, Program.Service.NeoSystem.Settings.Network);
             }
             catch (InvalidOperationException)
