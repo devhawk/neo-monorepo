@@ -40,7 +40,7 @@ namespace Neo.Compiler
 
         public bool Success => diagnostics.All(p => p.Severity != DiagnosticSeverity.Error);
         public IReadOnlyList<Diagnostic> Diagnostics => diagnostics;
-        public string ContractName { get; private set; } = "";
+        public string? ContractName { get; private set; }
         internal Options Options { get; private set; }
         internal IEnumerable<IFieldSymbol> StaticFieldSymbols => staticFields.OrderBy(p => p.Value).Select(p => p.Key);
         internal IEnumerable<(byte, ITypeSymbol)> VTables => vtables.OrderBy(p => p.Value).Select(p => (p.Value, p.Key));
@@ -64,6 +64,7 @@ namespace Neo.Compiler
         {
             this.compilation = compilation;
             this.Options = options;
+            this.ContractName = options.ContractName;
         }
 
         private void RemoveEmptyInitialize()
@@ -100,6 +101,7 @@ namespace Neo.Compiler
 
         private void Compile()
         {
+            HashSet<INamedTypeSymbol> processed = new();
             foreach (SyntaxTree tree in compilation.SyntaxTrees)
             {
                 SemanticModel model = compilation.GetSemanticModel(tree);
@@ -107,7 +109,7 @@ namespace Neo.Compiler
                 if (!Success) continue;
                 try
                 {
-                    ProcessCompilationUnit(model, tree.GetCompilationUnitRoot());
+                    ProcessCompilationUnit(processed, model, tree.GetCompilationUnitRoot());
                 }
                 catch (CompilationException ex)
                 {
@@ -146,7 +148,7 @@ namespace Neo.Compiler
             return Compile(sourceFiles, references, options);
         }
 
-        public static Compilation GetCompilation(string csproj)
+        public static Compilation GetCompilation(string csproj, out string assemblyName)
         {
             string folder = Path.GetDirectoryName(csproj)!;
             string obj = Path.Combine(folder, "obj");
@@ -156,6 +158,7 @@ namespace Neo.Compiler
             List<MetadataReference> references = new(commonReferences);
             CSharpCompilationOptions options = new(OutputKind.DynamicallyLinkedLibrary);
             XDocument xml = XDocument.Load(csproj);
+            assemblyName = xml.Root!.Elements("PropertyGroup").Elements("AssemblyName").Select(p => p.Value).SingleOrDefault() ?? Path.GetFileNameWithoutExtension(csproj);
             sourceFiles.UnionWith(xml.Root!.Elements("ItemGroup").Elements("Compile").Attributes("Include").Select(p => Path.GetFullPath(p.Value, folder)));
             Process.Start(new ProcessStartInfo
             {
@@ -171,6 +174,7 @@ namespace Neo.Compiler
                 switch (assets["libraries"][name]["type"].GetString())
                 {
                     case "package":
+                        string namePath = assets["libraries"][name]["path"].GetString();
                         string[] files = assets["libraries"][name]["files"].GetArray()
                             .Select(p => p.GetString())
                             .Where(p => p.StartsWith("src/"))
@@ -182,22 +186,22 @@ namespace Neo.Compiler
                             foreach (var (file, _) in dllFiles.Properties)
                             {
                                 if (file.EndsWith("_._")) continue;
-                                string path = Path.Combine(packagesPath, name, file);
+                                string path = Path.Combine(packagesPath, namePath, file);
                                 if (!File.Exists(path)) continue;
                                 references.Add(MetadataReference.CreateFromFile(path));
                             }
                         }
                         else
                         {
-                            IEnumerable<SyntaxTree> st = files.OrderBy(p => p).Select(p => Path.Combine(packagesPath, name, p)).Select(p => CSharpSyntaxTree.ParseText(File.ReadAllText(p), path: p));
-                            CSharpCompilation cr = CSharpCompilation.Create(Path.GetDirectoryName(name), st, commonReferences, options);
+                            IEnumerable<SyntaxTree> st = files.OrderBy(p => p).Select(p => Path.Combine(packagesPath, namePath, p)).Select(p => CSharpSyntaxTree.ParseText(File.ReadAllText(p), path: p));
+                            CSharpCompilation cr = CSharpCompilation.Create(Path.GetDirectoryName(namePath), st, commonReferences, options);
                             references.Add(cr.ToMetadataReference());
                         }
                         break;
                     case "project":
                         string msbuildProject = assets["libraries"][name]["msbuildProject"].GetString();
                         msbuildProject = Path.GetFullPath(msbuildProject, folder);
-                        references.Add(GetCompilation(msbuildProject).ToMetadataReference());
+                        references.Add(GetCompilation(msbuildProject, out _).ToMetadataReference());
                         break;
                     default:
                         throw new NotSupportedException();
@@ -209,8 +213,9 @@ namespace Neo.Compiler
 
         public static CompilationContext CompileProject(string csproj, Options options)
         {
-            Compilation compilation = GetCompilation(csproj);
+            Compilation compilation = GetCompilation(csproj, out string assemblyName);
             CompilationContext context = new(compilation, options);
+            context.ContractName ??= assemblyName;
             context.Compile();
             return context;
         }
@@ -294,50 +299,63 @@ namespace Neo.Compiler
 
         public JObject CreateDebugInformation()
         {
-            SyntaxTree[] trees = compilation.SyntaxTrees.ToArray();
+            string[] sourceLocations = GetSourceLocations(compilation).Distinct().ToArray();
             return new JObject
             {
                 ["hash"] = Script.ToScriptHash().ToString(),
-                ["documents"] = compilation.SyntaxTrees.Select(p => (JString)p.FilePath).ToArray(),
+                ["documents"] = sourceLocations.Select(p => (JString)p).ToArray(),
+                ["static-variables"] = staticFields.OrderBy(p => p.Value).Select(p => (JString)$"{p.Key.Name},{p.Key.Type.GetContractParameterType()},{p.Value}").ToArray(),
                 ["methods"] = methodsConverted.Where(p => p.SyntaxNode is not null).Select(m => new JObject
                 {
                     ["id"] = m.Symbol.ToString(),
                     ["name"] = $"{m.Symbol.ContainingType},{m.Symbol.Name}",
                     ["range"] = $"{m.Instructions[0].Offset}-{m.Instructions[^1].Offset}",
-                    ["params"] = m.Symbol.Parameters.Select(p => (JString)$"{p.Name},{p.Type.GetContractParameterType()}").ToArray(),
+                    ["params"] = (m.Symbol.IsStatic ? Array.Empty<JString>() : new JString[] { "this,Any" })
+                        .Concat(m.Symbol.Parameters.Select((p, i) => (JString)$"{p.Name},{p.Type.GetContractParameterType()},{i}"))
+                        .ToArray(),
                     ["return"] = m.Symbol.ReturnType.GetContractParameterType().ToString(),
-                    ["variables"] = m.Variables.Select(p => (JString)$"{p.Name},{p.Type.GetContractParameterType()}").ToArray(),
+                    ["variables"] = m.Variables.Select(p => (JString)$"{p.Symbol.Name},{p.Symbol.Type.GetContractParameterType()},{p.SlotIndex}").ToArray(),
                     ["sequence-points"] = m.Instructions.Where(p => p.SourceLocation is not null).Select(p =>
                     {
                         FileLinePositionSpan span = p.SourceLocation!.GetLineSpan();
-                        return (JString)$"{p.Offset}[{Array.IndexOf(trees, p.SourceLocation.SourceTree)}]{span.StartLinePosition.Line + 1}:{span.StartLinePosition.Character + 1}-{span.EndLinePosition.Line + 1}:{span.EndLinePosition.Character + 1}";
+                        return (JString)$"{p.Offset}[{Array.IndexOf(sourceLocations, p.SourceLocation.SourceTree!.FilePath)}]{span.StartLinePosition.Line + 1}:{span.StartLinePosition.Character + 1}-{span.EndLinePosition.Line + 1}:{span.EndLinePosition.Character + 1}";
                     }).ToArray()
                 }).ToArray(),
                 ["events"] = eventsExported.Select(e => new JObject
                 {
                     ["id"] = e.Name,
                     ["name"] = $"{e.Symbol.ContainingType},{e.Symbol.Name}",
-                    ["params"] = e.Parameters.Select(p => (JString)$"{p.Name},{p.Type}").ToArray()
+                    ["params"] = e.Parameters.Select((p, i) => (JString)$"{p.Name},{p.Type},{i}").ToArray()
                 }).ToArray()
             };
         }
 
-        private void ProcessCompilationUnit(SemanticModel model, CompilationUnitSyntax syntax)
+        private static IEnumerable<string> GetSourceLocations(Compilation compilation)
         {
-            foreach (MemberDeclarationSyntax member in syntax.Members)
-                ProcessMemberDeclaration(model, member);
+            foreach (SyntaxTree syntaxTree in compilation.SyntaxTrees)
+                yield return syntaxTree.FilePath;
+            foreach (CompilationReference reference in compilation.References.OfType<CompilationReference>())
+                foreach (string path in GetSourceLocations(reference.Compilation))
+                    yield return path;
         }
 
-        private void ProcessMemberDeclaration(SemanticModel model, MemberDeclarationSyntax syntax)
+        private void ProcessCompilationUnit(HashSet<INamedTypeSymbol> processed, SemanticModel model, CompilationUnitSyntax syntax)
+        {
+            foreach (MemberDeclarationSyntax member in syntax.Members)
+                ProcessMemberDeclaration(processed, model, member);
+        }
+
+        private void ProcessMemberDeclaration(HashSet<INamedTypeSymbol> processed, SemanticModel model, MemberDeclarationSyntax syntax)
         {
             switch (syntax)
             {
                 case NamespaceDeclarationSyntax @namespace:
                     foreach (MemberDeclarationSyntax member in @namespace.Members)
-                        ProcessMemberDeclaration(model, member);
+                        ProcessMemberDeclaration(processed, model, member);
                     break;
                 case ClassDeclarationSyntax @class:
-                    ProcessClass(model, model.GetDeclaredSymbol(@class)!);
+                    INamedTypeSymbol symbol = model.GetDeclaredSymbol(@class)!;
+                    if (processed.Add(symbol)) ProcessClass(model, symbol);
                     break;
             }
         }
@@ -348,17 +366,17 @@ namespace Neo.Compiler
             bool isPublic = symbol.DeclaredAccessibility == Accessibility.Public;
             bool isAbstract = symbol.IsAbstract;
             bool isContractType = symbol.IsSubclassOf(nameof(scfx.Neo.SmartContract.Framework.SmartContract));
-            bool isSmartContract = !scTypeFound && isPublic && !isAbstract && isContractType;
+            bool isSmartContract = isPublic && !isAbstract && isContractType;
             if (isSmartContract)
             {
+                if (scTypeFound) throw new CompilationException(DiagnosticId.MultiplyContracts, $"Only one smart contract is allowed.");
                 scTypeFound = true;
-                ContractName = symbol.Name;
                 foreach (var attribute in symbol.GetAttributes())
                 {
                     switch (attribute.AttributeClass!.Name)
                     {
                         case nameof(DisplayNameAttribute):
-                            ContractName = (string)attribute.ConstructorArguments[0].Value!;
+                            ContractName ??= (string)attribute.ConstructorArguments[0].Value!;
                             break;
                         case nameof(scfx.Neo.SmartContract.Framework.ManifestExtraAttribute):
                             manifestExtra[(string)attribute.ConstructorArguments[0].Value!] = (string)attribute.ConstructorArguments[1].Value!;
@@ -377,6 +395,7 @@ namespace Neo.Compiler
                             break;
                     }
                 }
+                ContractName ??= symbol.Name;
             }
             foreach (ISymbol member in symbol.GetAllMembers())
             {
