@@ -1,4 +1,4 @@
-param([string]$branch = "master", [switch]$merge)
+param([string]$branch = "rc4", [switch]$merge)
 
 $currentBranch = git symbolic-ref -q --short HEAD 2> $null
 
@@ -6,20 +6,22 @@ if ($currentBranch -ne $branch) {
     throw "wrong branch $branch"
 }
 
-$projects = "core","devpack","modules","node" ,"vm"
-
-git fetch --all
-foreach ($prj in $projects) {
-    write-host $prj -ForegroundColor Cyan;
-    git subtree pull --prefix $prj "official-$prj" $branch --squash
+$projects = @{
+    core = "v3.0.0-rc4";
+    devpack = "v3.0.0-rc4";
+    modules = "v3.0.0-rc4";
+    node = "v3.0.0-rc4";
+    vm = "v3.0.0-rc4"
 }
 
-# since NEON is moved to a different branch, need to handle it special
-write-host devpack-msil -ForegroundColor Cyan;
-git subtree pull --prefix devpack-msil official-devpack msil --squash 
+git fetch --all
+foreach ($kvp in $projects.GetEnumerator()) {
+    $prj = $kvp.Key
+    $commit = $kvp.Value
+    git subtree pull --prefix $prj "official-$prj" $commit --squash
+}
 
 if ($merge) {
-    write-host "Merging $branch into monorepo-$branch" -ForegroundColor Cyan; 
     git push
     git checkout "monorepo-$branch"
     git merge $branch
