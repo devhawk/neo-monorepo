@@ -6,6 +6,7 @@ using Neo.SmartContract.Native;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using Array = Neo.VM.Types.Array;
@@ -142,6 +143,7 @@ namespace Neo.Network.RPC
                 PrevHash = UInt256.Parse(json["previousblockhash"].AsString()),
                 MerkleRoot = UInt256.Parse(json["merkleroot"].AsString()),
                 Timestamp = (ulong)json["time"].AsNumber(),
+                Nonce = Convert.ToUInt64(json["nonce"].AsString(), 16),
                 Index = (uint)json["index"].AsNumber(),
                 PrimaryIndex = (byte)json["primary"].AsNumber(),
                 NextConsensus = json["nextconsensus"].ToScriptHash(protocolSettings),
@@ -221,7 +223,7 @@ namespace Neo.Network.RPC
                 case StackItemType.ByteString:
                     return new ByteString(Convert.FromBase64String(json["value"].AsString()));
                 case StackItemType.Integer:
-                    return new Integer(new BigInteger(json["value"].AsNumber()));
+                    return BigInteger.Parse(json["value"].AsString());
                 case StackItemType.Array:
                     Array array = new();
                     foreach (var item in (JArray)json["value"])
@@ -243,7 +245,7 @@ namespace Neo.Network.RPC
                 case StackItemType.Pointer:
                     return new Pointer(null, (int)json["value"].AsNumber());
                 case StackItemType.InteropInterface:
-                    return new InteropInterface(new object()); // See https://github.com/neo-project/neo/blob/master/src/neo/VM/Helper.cs#L194
+                    return new InteropInterface(new object());
             }
             return json["value"] is null ? StackItem.Null : json["value"].AsString();
         }
