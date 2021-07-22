@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Neo.VM.Types
@@ -31,9 +32,11 @@ namespace Neo.VM.Types
         /// <summary>
         /// Create a new structure with the same content as this structure. All nested structures will be copied by value.
         /// </summary>
+        /// <param name="limits">Execution engine limits</param>
         /// <returns>The copied structure.</returns>
-        public Struct Clone()
+        public Struct Clone(ExecutionEngineLimits limits)
         {
+            int count = (int)(limits.MaxStackSize - 1);
             Struct result = new(ReferenceCounter);
             Queue<Struct> queue = new();
             queue.Enqueue(result);
@@ -44,6 +47,8 @@ namespace Neo.VM.Types
                 Struct b = queue.Dequeue();
                 foreach (StackItem item in b)
                 {
+                    count--;
+                    if (count < 0) throw new InvalidOperationException("Beyond clone limits!");
                     if (item is Struct sb)
                     {
                         Struct sa = new(ReferenceCounter);
@@ -69,13 +74,21 @@ namespace Neo.VM.Types
 
         public override bool Equals(StackItem? other)
         {
+            throw new NotSupportedException();
+        }
+
+        internal override bool Equals(StackItem? other, ExecutionEngineLimits limits)
+        {
             if (other is not Struct s) return false;
             Stack<StackItem> stack1 = new();
             Stack<StackItem> stack2 = new();
             stack1.Push(this);
             stack2.Push(s);
+            uint count = limits.MaxStackSize;
             while (stack1.Count > 0)
             {
+                if (count-- == 0)
+                    throw new InvalidOperationException("Too many struct items to compare.");
                 StackItem a = stack1.Pop();
                 StackItem b = stack2.Pop();
                 if (a is Struct sa)

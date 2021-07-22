@@ -766,14 +766,14 @@ namespace Neo.VM
                     {
                         StackItem x2 = Pop();
                         StackItem x1 = Pop();
-                        Push(x1.Equals(x2));
+                        Push(x1.Equals(x2, Limits));
                         break;
                     }
                 case OpCode.NOTEQUAL:
                     {
                         StackItem x2 = Pop();
                         StackItem x1 = Pop();
-                        Push(!x1.Equals(x2));
+                        Push(!x1.Equals(x2, Limits));
                         break;
                     }
 
@@ -846,6 +846,7 @@ namespace Neo.VM
                 case OpCode.POW:
                     {
                         var exponent = (int)Pop().GetInteger();
+                        Limits.AssertShift(exponent);
                         var value = Pop().GetInteger();
                         Push(BigInteger.Pow(value, exponent));
                         break;
@@ -1129,7 +1130,7 @@ namespace Neo.VM
                         VMArray newArray = new(ReferenceCounter);
                         foreach (StackItem item in values)
                             if (item is Struct s)
-                                newArray.Add(s.Clone());
+                                newArray.Add(s.Clone(Limits));
                             else
                                 newArray.Add(item);
                         Push(newArray);
@@ -1182,14 +1183,14 @@ namespace Neo.VM
                     {
                         StackItem newItem = Pop();
                         VMArray array = Pop<VMArray>();
-                        if (newItem is Struct s) newItem = s.Clone();
+                        if (newItem is Struct s) newItem = s.Clone(Limits);
                         array.Add(newItem);
                         break;
                     }
                 case OpCode.SETITEM:
                     {
                         StackItem value = Pop();
-                        if (value is Struct s) value = s.Clone();
+                        if (value is Struct s) value = s.Clone(Limits);
                         PrimitiveType key = Pop<PrimitiveType>();
                         var x = Pop();
                         switch (x)
