@@ -287,7 +287,7 @@ namespace Neo.Compiler
                         Push(value.HexToBytes(true));
                         break;
                     case ContractParameterType.Hash160:
-                        Push(value.ToScriptHash(context.Options.AddressVersion).ToArray());
+                        Push((UInt160.TryParse(value, out var hash) ? hash : value.ToScriptHash(context.Options.AddressVersion)).ToArray());
                         break;
                     case ContractParameterType.PublicKey:
                         Push(ECPoint.Parse(value, ECCurve.Secp256r1).EncodePoint(true));
@@ -1927,9 +1927,10 @@ namespace Neo.Compiler
         private void EmitComplexAssignmentOperator(ITypeSymbol type, SyntaxToken operatorToken)
         {
             bool isBoolean = type.SpecialType == SpecialType.System_Boolean;
+            bool isString = type.SpecialType == SpecialType.System_String;
             AddInstruction(operatorToken.ValueText switch
             {
-                "+=" => OpCode.ADD,
+                "+=" => isString ? OpCode.CAT : OpCode.ADD,
                 "-=" => OpCode.SUB,
                 "*=" => OpCode.MUL,
                 "/=" => OpCode.DIV,
@@ -1941,6 +1942,7 @@ namespace Neo.Compiler
                 ">>=" => OpCode.SHR,
                 _ => throw new CompilationException(operatorToken, DiagnosticId.SyntaxNotSupported, $"Unsupported operator: {operatorToken}")
             });
+            if (isString) ChangeType(VM.Types.StackItemType.ByteString);
         }
 
         private void ConvertObjectCreationExpression(SemanticModel model, BaseObjectCreationExpressionSyntax expression)
