@@ -4,7 +4,6 @@
     <Copyright>2016-2021 The Neo Project</Copyright>
     <AssemblyTitle>Neo.GUI</AssemblyTitle>
     <VersionPrefix>3.0.0</VersionPrefix>
-    <VersionSuffix>rc4</VersionSuffix>
     <Authors>The Neo Project</Authors>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0-windows</TargetFramework>
