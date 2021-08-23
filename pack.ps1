@@ -10,9 +10,7 @@ $solutions =
     "core\neo.sln", 
     "modules\neo-modules.sln", 
     "devpack\src\Neo.Compiler.CSharp\Neo.Compiler.CSharp.csproj",
-    "devpack\src\Neo.SmartContract.Framework\Neo.SmartContract.Framework.csproj", 
-    "devpack-msil\src\Neo.Compiler.MSIL\Neo.Compiler.MSIL.csproj",
-    "devpack-msil\src\Neo.SmartContract.Framework\Neo.SmartContract.Framework.csproj"
+    "devpack\src\Neo.SmartContract.Framework\Neo.SmartContract.Framework.csproj"
 
 del "$ScriptDir/artifacts" -Recurse -Force -ErrorAction SilentlyContinue
 $solutions | %{ 
