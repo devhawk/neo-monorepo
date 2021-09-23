@@ -1,13 +1,3 @@
-// Copyright (C) 2016-2021 The Neo Project.
-// 
-// The neo-cli is free software distributed under the MIT software 
-// license, see the accompanying file LICENSE in the main directory of
-// the project or http://www.opensource.org/licenses/mit-license.php 
-// for more details.
-// 
-// Redistribution and use in source and binary forms with or without
-// modifications are permitted.
-
 using Neo.ConsoleService;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
@@ -62,7 +52,7 @@ namespace Neo.CLI
             }
             catch (InvalidOperationException e)
             {
-                ConsoleHelper.Error(GetExceptionMessage(e));
+                Console.WriteLine("Error: " + GetExceptionMessage(e));
                 return;
             }
             if (!ReadUserInput("Relay tx(no|yes)").IsYes())
@@ -91,7 +81,7 @@ namespace Neo.CLI
             var balance = new BigDecimal(((PrimitiveType)balanceResult).GetInteger(), asset.Decimals);
 
             Console.WriteLine();
-            ConsoleHelper.Info($"{asset.AssetName} balance: ", $"{balance}");
+            Console.WriteLine($"{asset.AssetName} balance: {balance}");
         }
 
         /// <summary>
@@ -103,7 +93,7 @@ namespace Neo.CLI
         {
             ContractState contract = NativeContract.ContractManagement.GetContract(NeoSystem.StoreView, tokenHash);
             if (contract == null) Console.WriteLine($"Contract hash not exist: {tokenHash}");
-            else ConsoleHelper.Info("Result: ", contract.Manifest.Name);
+            else Console.WriteLine($"Result : {contract.Manifest.Name.ToString()}");
         }
 
         /// <summary>
@@ -115,7 +105,7 @@ namespace Neo.CLI
         {
             if (!OnInvokeWithResult(tokenHash, "decimals", out StackItem result, null)) return;
 
-            ConsoleHelper.Info("Result: ", $"{((PrimitiveType)result).GetInteger()}");
+            Console.WriteLine($"Result : {((PrimitiveType)result).GetInteger()}");
         }
 
         /// <summary>
@@ -130,7 +120,7 @@ namespace Neo.CLI
             var asset = new AssetDescriptor(NeoSystem.StoreView, NeoSystem.Settings, tokenHash);
             var totalSupply = new BigDecimal(((PrimitiveType)result).GetInteger(), asset.Decimals);
 
-            ConsoleHelper.Info("Result: ", $"{totalSupply}");
+            Console.WriteLine($"Result : {totalSupply}");
         }
     }
 }

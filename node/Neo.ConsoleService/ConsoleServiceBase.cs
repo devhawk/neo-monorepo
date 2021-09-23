@@ -1,13 +1,3 @@
-// Copyright (C) 2016-2021 The Neo Project.
-// 
-// The Neo.ConsoleService is free software distributed under the MIT 
-// software license, see the accompanying file LICENSE in the main directory
-// of the project or http://www.opensource.org/licenses/mit-license.php 
-// for more details.
-// 
-// Redistribution and use in source and binary forms with or without
-// modifications are permitted.
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -524,7 +514,7 @@ namespace Neo.ConsoleService
                 {
                     if (Environment.OSVersion.Platform != PlatformID.Win32NT)
                     {
-                        ConsoleHelper.Warning("Only support for installing services on Windows.");
+                        Console.WriteLine("Only support for installing services on Windows.");
                         return;
                     }
                     string arguments = string.Format("create {0} start= auto binPath= \"{1}\"", ServiceName, Process.GetCurrentProcess().MainModule.FileName);
@@ -546,7 +536,7 @@ namespace Neo.ConsoleService
                 {
                     if (Environment.OSVersion.Platform != PlatformID.Win32NT)
                     {
-                        ConsoleHelper.Warning("Only support for installing services on Windows.");
+                        Console.WriteLine("Only support for installing services on Windows.");
                         return;
                     }
                     Process process = Process.Start(new ProcessStartInfo
@@ -619,16 +609,16 @@ namespace Neo.ConsoleService
                 {
                     if (!OnCommand(line))
                     {
-                        ConsoleHelper.Error("Command not found");
+                        Console.WriteLine("error: Command not found");
                     }
                 }
                 catch (TargetInvocationException ex)
                 {
-                    ConsoleHelper.Error(ex.InnerException.Message);
+                    Console.WriteLine($"error: {ex.InnerException.Message}");
                 }
                 catch (Exception ex)
                 {
-                    ConsoleHelper.Error(ex.Message);
+                    Console.WriteLine($"error: {ex.Message}");
                 }
             }
 
