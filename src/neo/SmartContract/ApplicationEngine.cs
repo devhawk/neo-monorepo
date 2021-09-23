@@ -1,13 +1,3 @@
-// Copyright (C) 2015-2021 The Neo Project.
-// 
-// The neo is free software distributed under the MIT software license, 
-// see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php 
-// for more details.
-// 
-// Redistribution and use in source and binary forms with or without
-// modifications are permitted.
-
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
@@ -188,9 +178,6 @@ namespace Neo.SmartContract
 
         private ExecutionContext CallContractInternal(ContractState contract, ContractMethodDescriptor method, CallFlags flags, bool hasReturnValue, IReadOnlyList<StackItem> args)
         {
-            if (NativeContract.Policy.IsBlocked(Snapshot, contract.Hash))
-                throw new InvalidOperationException($"The contract {contract.Hash} has been blocked.");
-
             if (method.Safe)
             {
                 flags &= ~(CallFlags.WriteStates | CallFlags.AllowNotify);
