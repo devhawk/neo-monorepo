@@ -1,13 +1,3 @@
-// Copyright (C) 2016-2021 The Neo Project.
-// 
-// The neo-cli is free software distributed under the MIT software 
-// license, see the accompanying file LICENSE in the main directory of
-// the project or http://www.opensource.org/licenses/mit-license.php 
-// for more details.
-// 
-// Redistribution and use in source and binary forms with or without
-// modifications are permitted.
-
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.IO;
@@ -34,7 +24,7 @@ namespace Neo.CLI
         {
             if (payload == null)
             {
-                ConsoleHelper.Warning("You must input the payload to relay.");
+                Console.WriteLine("You must input the payload to relay.");
                 return;
             }
 
@@ -134,7 +124,7 @@ namespace Neo.CLI
         {
             if (jsonObjectToRelay == null)
             {
-                ConsoleHelper.Warning("You must input JSON object to relay.");
+                Console.WriteLine("You must input JSON object to relay.");
                 return;
             }
 
@@ -143,21 +133,21 @@ namespace Neo.CLI
                 ContractParametersContext context = ContractParametersContext.Parse(jsonObjectToRelay.ToString(), NeoSystem.StoreView);
                 if (!context.Completed)
                 {
-                    ConsoleHelper.Error("The signature is incomplete.");
+                    Console.WriteLine("The signature is incomplete.");
                     return;
                 }
                 if (!(context.Verifiable is Transaction tx))
                 {
-                    ConsoleHelper.Warning("Only support to relay transaction.");
+                    Console.WriteLine($"Only support to relay transaction.");
                     return;
                 }
                 tx.Witnesses = context.GetWitnesses();
                 NeoSystem.Blockchain.Tell(tx);
-                Console.WriteLine($"Data relay success, the hash is shown as follows: {Environment.NewLine}{tx.Hash}");
+                Console.WriteLine($"Data relay success, the hash is shown as follows:{Environment.NewLine}{tx.Hash}");
             }
             catch (Exception e)
             {
-                ConsoleHelper.Error(GetExceptionMessage(e));
+                Console.WriteLine("Error: " + GetExceptionMessage(e));
             }
         }
     }

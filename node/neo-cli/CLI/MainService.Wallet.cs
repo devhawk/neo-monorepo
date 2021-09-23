@@ -1,13 +1,3 @@
-// Copyright (C) 2016-2021 The Neo Project.
-// 
-// The neo-cli is free software distributed under the MIT software 
-// license, see the accompanying file LICENSE in the main directory of
-// the project or http://www.opensource.org/licenses/mit-license.php 
-// for more details.
-// 
-// Redistribution and use in source and binary forms with or without
-// modifications are permitted.
-
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Cryptography.ECC;
@@ -38,13 +28,13 @@ namespace Neo.CLI
         {
             if (!File.Exists(path))
             {
-                ConsoleHelper.Error("File does not exist");
+                Console.WriteLine($"File does not exist");
                 return;
             }
             string password = ReadUserInput("password", true);
             if (password.Length == 0)
             {
-                ConsoleHelper.Info("Cancelled");
+                Console.WriteLine("Cancelled");
                 return;
             }
             try
@@ -53,7 +43,7 @@ namespace Neo.CLI
             }
             catch (System.Security.Cryptography.CryptographicException)
             {
-                ConsoleHelper.Error($"Failed to open file \"{path}\"");
+                Console.WriteLine($"Failed to open file \"{path}\"");
             }
         }
 
@@ -63,9 +53,13 @@ namespace Neo.CLI
         [ConsoleCommand("close wallet", Category = "Wallet Commands")]
         private void OnCloseWalletCommand()
         {
-            if (NoWallet()) return;
+            if (CurrentWallet == null)
+            {
+                Console.WriteLine($"Wallet is not opened");
+                return;
+            }
             CurrentWallet = null;
-            ConsoleHelper.Info("Wallet is closed");
+            Console.WriteLine($"Wallet is closed");
         }
 
         /// <summary>
@@ -76,24 +70,24 @@ namespace Neo.CLI
         {
             if (Path.GetExtension(path).ToLowerInvariant() != ".db3")
             {
-                ConsoleHelper.Warning("Can't upgrade the wallet file. Check if your wallet is in db3 format.");
+                Console.WriteLine("Can't upgrade the wallet file.");
                 return;
             }
             if (!File.Exists(path))
             {
-                ConsoleHelper.Error("File does not exist.");
+                Console.WriteLine("File does not exist.");
                 return;
             }
             string password = ReadUserInput("password", true);
             if (password.Length == 0)
             {
-                ConsoleHelper.Info("Cancelled");
+                Console.WriteLine("Cancelled");
                 return;
             }
             string path_new = Path.ChangeExtension(path, ".json");
             if (File.Exists(path_new))
             {
-                ConsoleHelper.Warning($"File '{path_new}' already exists");
+                Console.WriteLine($"File '{path_new}' already exists");
                 return;
             }
             NEP6Wallet.Migrate(path_new, path, password, NeoSystem.Settings).Save();
@@ -108,6 +102,7 @@ namespace Neo.CLI
         private void OnCreateAddressCommand(ushort count = 1)
         {
             if (NoWallet()) return;
+
             string path = "address.txt";
             if (File.Exists(path))
             {
@@ -139,32 +134,6 @@ namespace Neo.CLI
         }
 
         /// <summary>
-        /// Process "delete address" command
-        /// </summary>
-        /// <param name="address">Address</param>
-        [ConsoleCommand("delete address", Category = "Wallet Commands")]
-        private void OnDeleteAddressCommand(UInt160 address)
-        {
-            if (NoWallet()) return;
-
-            if (ReadUserInput($"Warning: Irrevocable operation!\nAre you sure to delete account {address.ToAddress(NeoSystem.Settings.AddressVersion)}? (no|yes)").IsYes())
-            {
-                if (CurrentWallet.DeleteAccount(address))
-                {
-                    if (CurrentWallet is NEP6Wallet wallet)
-                    {
-                        wallet.Save();
-                    }
-                    ConsoleHelper.Info($"Address {address} deleted.");
-                }
-                else
-                {
-                    ConsoleHelper.Warning($"Address {address} doesn't exist.");
-                }
-            }
-        }
-
-        /// <summary>
         /// Process "export key" command
         /// </summary>
         /// <param name="path">Path</param>
@@ -175,18 +144,18 @@ namespace Neo.CLI
             if (NoWallet()) return;
             if (path != null && File.Exists(path))
             {
-                ConsoleHelper.Error($"File '{path}' already exists");
+                Console.WriteLine($"Error: File '{path}' already exists");
                 return;
             }
             string password = ReadUserInput("password", true);
             if (password.Length == 0)
             {
-                ConsoleHelper.Info("Cancelled");
+                Console.WriteLine("Cancelled");
                 return;
             }
             if (!CurrentWallet.VerifyPassword(password))
             {
-                ConsoleHelper.Error("Incorrect password");
+                Console.WriteLine("Incorrect password");
                 return;
             }
             IEnumerable<KeyPair> keys;
@@ -208,28 +177,28 @@ namespace Neo.CLI
         /// Process "create wallet" command
         /// </summary>
         [ConsoleCommand("create wallet", Category = "Wallet Commands")]
-        private void OnCreateWalletCommand(string path, string wifOrFile = null)
+        private void OnCreateWalletCommand(string path)
         {
             string password = ReadUserInput("password", true);
             if (password.Length == 0)
             {
-                ConsoleHelper.Info("Cancelled");
+                Console.WriteLine("Cancelled");
                 return;
             }
-            string password2 = ReadUserInput("repeat password", true);
+            string password2 = ReadUserInput("password", true);
             if (password != password2)
             {
-                ConsoleHelper.Error("Two passwords not match.");
+                Console.WriteLine("Error");
                 return;
             }
-            if (File.Exists(path))
+            if (!File.Exists(path))
+            {
+                CreateWallet(path, password);
+            }
+            else
             {
                 Console.WriteLine("This wallet already exists, please create another one.");
-                return;
             }
-            bool createDefaultAccount = wifOrFile is null;
-            CreateWallet(path, password, createDefaultAccount);
-            if (!createDefaultAccount) OnImportKeyCommand(wifOrFile);
         }
 
         /// <summary>
@@ -241,11 +210,12 @@ namespace Neo.CLI
         private void OnImportMultisigAddress(ushort m, ECPoint[] publicKeys)
         {
             if (NoWallet()) return;
+
             int n = publicKeys.Length;
 
             if (m < 1 || m > n || n > 1024)
             {
-                ConsoleHelper.Error("Invalid parameters.");
+                Console.WriteLine("Error. Invalid parameters.");
                 return;
             }
 
@@ -256,7 +226,7 @@ namespace Neo.CLI
             if (CurrentWallet is NEP6Wallet wallet)
                 wallet.Save();
 
-            ConsoleHelper.Info("Multisig. Addr.: ", multiSignContract.ScriptHash.ToAddress(NeoSystem.Settings.AddressVersion));
+            Console.WriteLine("Multisig. Addr.: " + multiSignContract.ScriptHash.ToAddress(NeoSystem.Settings.AddressVersion));
         }
 
         /// <summary>
@@ -265,7 +235,6 @@ namespace Neo.CLI
         [ConsoleCommand("import key", Category = "Wallet Commands")]
         private void OnImportKeyCommand(string wifOrFile)
         {
-            if (NoWallet()) return;
             byte[] prikey = null;
             try
             {
@@ -278,7 +247,7 @@ namespace Neo.CLI
 
                 if (!fileInfo.Exists)
                 {
-                    ConsoleHelper.Error($"File '{fileInfo.FullName}' doesn't exists");
+                    Console.WriteLine($"Error: File '{fileInfo.FullName}' doesn't exists");
                     return;
                 }
 
@@ -309,8 +278,8 @@ namespace Neo.CLI
             {
                 WalletAccount account = CurrentWallet.CreateAccount(prikey);
                 Array.Clear(prikey, 0, prikey.Length);
-                ConsoleHelper.Info("Address: ", account.Address);
-                ConsoleHelper.Info(" Pubkey: ", account.GetKey().PublicKey.EncodePoint(true).ToHexString());
+                Console.WriteLine($"Address: {account.Address}");
+                Console.WriteLine($" Pubkey: {account.GetKey().PublicKey.EncodePoint(true).ToHexString()}");
             }
             if (CurrentWallet is NEP6Wallet wallet)
                 wallet.Save();
@@ -322,7 +291,6 @@ namespace Neo.CLI
         [ConsoleCommand("import watchonly", Category = "Wallet Commands")]
         private void OnImportWatchOnlyCommand(string addressOrFile)
         {
-            if (NoWallet()) return;
             UInt160 address = null;
             try
             {
@@ -335,7 +303,7 @@ namespace Neo.CLI
 
                 if (!fileInfo.Exists)
                 {
-                    ConsoleHelper.Warning($"File '{fileInfo.FullName}' doesn't exists");
+                    Console.WriteLine($"Error: File '{fileInfo.FullName}' doesn't exists");
                     return;
                 }
 
@@ -360,16 +328,8 @@ namespace Neo.CLI
             }
             else
             {
-                WalletAccount account = CurrentWallet.GetAccount(address);
-                if (account is not null)
-                {
-                    ConsoleHelper.Warning("This address is already in your wallet");
-                }
-                else
-                {
-                    account = CurrentWallet.CreateAccount(address);
-                    ConsoleHelper.Info("Address: ", account.Address);
-                }
+                WalletAccount account = CurrentWallet.CreateAccount(address);
+                Console.WriteLine($"Address: {account.Address}");
             }
             if (CurrentWallet is NEP6Wallet wallet)
                 wallet.Save();
@@ -382,6 +342,7 @@ namespace Neo.CLI
         private void OnListAddressCommand()
         {
             if (NoWallet()) return;
+
             var snapshot = NeoSystem.StoreView;
             foreach (var account in CurrentWallet.GetAccounts())
             {
@@ -405,8 +366,8 @@ namespace Neo.CLI
                     type = "Deployed-Nonstandard";
                 }
 
-                ConsoleHelper.Info("   Address: ", $"{account.Address}\t{type}");
-                ConsoleHelper.Info("ScriptHash: ", $"{account.ScriptHash}\n");
+                Console.WriteLine($"{"   Address: "}{account.Address}\t{type}");
+                Console.WriteLine($"{"ScriptHash: "}{account.ScriptHash}\n");
             }
         }
 
@@ -421,15 +382,15 @@ namespace Neo.CLI
             foreach (UInt160 account in CurrentWallet.GetAccounts().Select(p => p.ScriptHash))
             {
                 Console.WriteLine(account.ToAddress(NeoSystem.Settings.AddressVersion));
-                ConsoleHelper.Info("NEO: ", $"{CurrentWallet.GetBalance(snapshot, NativeContract.NEO.Hash, account)}");
-                ConsoleHelper.Info("GAS: ", $"{CurrentWallet.GetBalance(snapshot, NativeContract.GAS.Hash, account)}");
+                Console.WriteLine($"NEO: {CurrentWallet.GetBalance(snapshot, NativeContract.NEO.Hash, account)}");
+                Console.WriteLine($"GAS: {CurrentWallet.GetBalance(snapshot, NativeContract.GAS.Hash, account)}");
                 Console.WriteLine();
             }
             Console.WriteLine("----------------------------------------------------");
-            ConsoleHelper.Info("Total:   NEO: ", $"{CurrentWallet.GetAvailable(snapshot, NativeContract.NEO.Hash),10}     ", "GAS: ", $"{CurrentWallet.GetAvailable(snapshot, NativeContract.GAS.Hash),18}");
+            Console.WriteLine($"Total:   NEO: {CurrentWallet.GetAvailable(snapshot, NativeContract.NEO.Hash),10}     GAS: {CurrentWallet.GetAvailable(snapshot, NativeContract.GAS.Hash),18}");
             Console.WriteLine();
-            ConsoleHelper.Info("NEO hash: ", NativeContract.NEO.Hash.ToString());
-            ConsoleHelper.Info("GAS hash: ", NativeContract.GAS.Hash.ToString());
+            Console.WriteLine("NEO hash: " + NativeContract.NEO.Hash);
+            Console.WriteLine("GAS hash: " + NativeContract.GAS.Hash);
         }
 
         /// <summary>
@@ -441,10 +402,9 @@ namespace Neo.CLI
             if (NoWallet()) return;
             foreach (WalletAccount account in CurrentWallet.GetAccounts().Where(p => p.HasKey))
             {
-                ConsoleHelper.Info("   Address: ", account.Address);
-                ConsoleHelper.Info("ScriptHash: ", account.ScriptHash.ToString());
-                ConsoleHelper.Info(" PublicKey: ", account.GetKey().PublicKey.EncodePoint(true).ToHexString());
-                Console.WriteLine();
+                Console.WriteLine($"   Address: {account.Address}");
+                Console.WriteLine($"ScriptHash: {account.ScriptHash}");
+                Console.WriteLine($" PublicKey: {account.GetKey().PublicKey.EncodePoint(true).ToHexString()}\n");
             }
         }
 
@@ -459,7 +419,7 @@ namespace Neo.CLI
 
             if (jsonObjectToSign == null)
             {
-                ConsoleHelper.Warning("You must input JSON object pending signature data.");
+                Console.WriteLine("You must input JSON object pending signature data.");
                 return;
             }
             try
@@ -468,19 +428,19 @@ namespace Neo.CLI
                 ContractParametersContext context = ContractParametersContext.Parse(jsonObjectToSign.ToString(), snapshot);
                 if (context.Network != neoSystem.Settings.Network)
                 {
-                    ConsoleHelper.Warning("Network mismatch.");
+                    Console.WriteLine("Network mismatch.");
                     return;
                 }
                 else if (!CurrentWallet.Sign(context))
                 {
-                    ConsoleHelper.Warning("Non-existent private key in wallet.");
+                    Console.WriteLine("Non-existent private key in wallet.");
                     return;
                 }
-                ConsoleHelper.Info("Signed Output: ", $"{Environment.NewLine}{context}");
+                Console.WriteLine($"Signed Output:{Environment.NewLine}{context}");
             }
             catch (Exception e)
             {
-                ConsoleHelper.Error(GetExceptionMessage(e));
+                Console.WriteLine("Error: " + GetExceptionMessage(e));
             }
         }
 
@@ -500,20 +460,20 @@ namespace Neo.CLI
             string password = ReadUserInput("password", true);
             if (password.Length == 0)
             {
-                ConsoleHelper.Info("Cancelled");
+                Console.WriteLine("Cancelled");
                 return;
             }
             if (!CurrentWallet.VerifyPassword(password))
             {
-                ConsoleHelper.Error("Incorrect password");
+                Console.WriteLine("Incorrect password");
                 return;
             }
             var snapshot = NeoSystem.StoreView;
             Transaction tx;
-            AssetDescriptor descriptor = new(snapshot, NeoSystem.Settings, asset);
+            AssetDescriptor descriptor = new AssetDescriptor(snapshot, NeoSystem.Settings, asset);
             if (!BigDecimal.TryParse(amount, descriptor.Decimals, out BigDecimal decimalAmount) || decimalAmount.Sign <= 0)
             {
-                ConsoleHelper.Error("Incorrect Amount Format");
+                Console.WriteLine("Incorrect Amount Format");
                 return;
             }
             try
@@ -533,29 +493,33 @@ namespace Neo.CLI
                     Scopes = WitnessScope.CalledByEntry,
                     Account = p
                 })
-                .ToArray() ?? Array.Empty<Signer>());
+                .ToArray() ?? new Signer[0]);
             }
             catch (Exception e)
             {
-                ConsoleHelper.Error(GetExceptionMessage(e));
+                Console.WriteLine("Error: " + GetExceptionMessage(e));
                 return;
             }
 
             if (tx == null)
             {
-                ConsoleHelper.Warning("Insufficient funds");
+                Console.WriteLine("Insufficient funds");
                 return;
             }
 
-            ConsoleHelper.Info("Network fee: ",
-                $"{new BigDecimal((BigInteger)tx.NetworkFee, NativeContract.GAS.Decimals)}\t",
-                "Total fee: ",
-                $"{new BigDecimal((BigInteger)(tx.SystemFee + tx.NetworkFee), NativeContract.GAS.Decimals)} GAS");
-            if (!ReadUserInput("Relay tx? (no|yes)").IsYes())
+            ContractParametersContext context = new ContractParametersContext(snapshot, tx, neoSystem.Settings.Network);
+            CurrentWallet.Sign(context);
+            if (context.Completed)
             {
-                return;
+                tx.Witnesses = context.GetWitnesses();
+                NeoSystem.Blockchain.Tell(tx);
+                Console.WriteLine($"TXID: {tx.Hash}");
             }
-            SignAndSendTx(NeoSystem.StoreView, tx);
+            else
+            {
+                Console.WriteLine("SignatureContext:");
+                Console.WriteLine(context.ToString());
+            }
         }
 
         /// <summary>
@@ -570,7 +534,7 @@ namespace Neo.CLI
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
             foreach (UInt160 account in CurrentWallet.GetAccounts().Select(p => p.ScriptHash))
                 gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
-            ConsoleHelper.Info("Unclaimed gas: ", new BigDecimal(gas, NativeContract.GAS.Decimals).ToString());
+            Console.WriteLine($"Unclaimed gas: {new BigDecimal(gas, NativeContract.GAS.Decimals)}");
         }
 
         /// <summary>
@@ -583,19 +547,19 @@ namespace Neo.CLI
             string oldPassword = ReadUserInput("password", true);
             if (oldPassword.Length == 0)
             {
-                ConsoleHelper.Info("Cancelled");
+                Console.WriteLine("Cancelled");
                 return;
             }
             if (!CurrentWallet.VerifyPassword(oldPassword))
             {
-                ConsoleHelper.Error("Incorrect password");
+                Console.WriteLine("Incorrect password");
                 return;
             }
             string newPassword = ReadUserInput("New password", true);
             string newPasswordReEntered = ReadUserInput("Re-Enter Password", true);
             if (!newPassword.Equals(newPasswordReEntered))
             {
-                ConsoleHelper.Error("Two passwords entered are inconsistent!");
+                Console.WriteLine("Two passwords entered are inconsistent!");
                 return;
             }
 
@@ -604,7 +568,7 @@ namespace Neo.CLI
                 string backupFile = wallet.Path + ".bak";
                 if (!File.Exists(wallet.Path) || File.Exists(backupFile))
                 {
-                    ConsoleHelper.Error("Wallet backup fail");
+                    Console.WriteLine("Wallet backup fail");
                     return;
                 }
                 try
@@ -613,7 +577,7 @@ namespace Neo.CLI
                 }
                 catch (IOException)
                 {
-                    ConsoleHelper.Error("Wallet backup fail");
+                    Console.WriteLine("Wallet backup fail");
                     return;
                 }
             }
@@ -627,7 +591,7 @@ namespace Neo.CLI
             }
             else
             {
-                ConsoleHelper.Error("Failed to change password");
+                Console.WriteLine("Failed to change password");
             }
         }
 
@@ -640,7 +604,7 @@ namespace Neo.CLI
             }
             catch (InvalidOperationException e)
             {
-                ConsoleHelper.Error("Failed creating contract params: " + GetExceptionMessage(e));
+                Console.WriteLine($"Error creating contract params: " + GetExceptionMessage(e));
                 throw;
             }
             CurrentWallet.Sign(context);
@@ -648,11 +612,12 @@ namespace Neo.CLI
             {
                 tx.Witnesses = context.GetWitnesses();
                 NeoSystem.Blockchain.Tell(tx);
-                ConsoleHelper.Info("Signed and relayed transaction with hash:\n", $"{tx.Hash}");
+                Console.WriteLine($"Signed and relayed transaction with hash={tx.Hash}");
             }
             else
             {
-                ConsoleHelper.Info("Incomplete signature:\n", $"{context}");
+                Console.WriteLine("Incomplete signature:");
+                Console.WriteLine(context.ToString());
             }
         }
     }

@@ -1,18 +1,8 @@
-// Copyright (C) 2016-2021 The Neo Project.
-// 
-// The neo-cli is free software distributed under the MIT software 
-// license, see the accompanying file LICENSE in the main directory of
-// the project or http://www.opensource.org/licenses/mit-license.php 
-// for more details.
-// 
-// Redistribution and use in source and binary forms with or without
-// modifications are permitted.
-
 using Neo.ConsoleService;
 using Neo.Cryptography.ECC;
 using Neo.IO.Json;
-using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.SmartContract;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
@@ -32,19 +22,25 @@ namespace Neo.CLI
         private void OnRegisterCandidateCommand(UInt160 account)
         {
             var testGas = NativeContract.NEO.GetRegisterPrice(NeoSystem.StoreView) + (BigInteger)Math.Pow(10, NativeContract.GAS.Decimals) * 10;
-            if (NoWallet()) return;
+
+            if (NoWallet())
+            {
+                Console.WriteLine("Need open wallet!");
+                return;
+            }
+
             WalletAccount currentAccount = CurrentWallet.GetAccount(account);
 
             if (currentAccount == null)
             {
-                ConsoleHelper.Warning("This address isn't in your wallet!");
+                Console.WriteLine("This address isn't in your wallet!");
                 return;
             }
             else
             {
                 if (currentAccount.Lock || currentAccount.WatchOnly)
                 {
-                    ConsoleHelper.Warning("Locked or WatchOnly address.");
+                    Console.WriteLine("Locked or WatchOnly address.");
                     return;
                 }
             }
@@ -67,19 +63,24 @@ namespace Neo.CLI
         [ConsoleCommand("unregister candidate", Category = "Vote Commands")]
         private void OnUnregisterCandidateCommand(UInt160 account)
         {
-            if (NoWallet()) return;
+            if (NoWallet())
+            {
+                Console.WriteLine("Need open wallet!");
+                return;
+            }
+
             WalletAccount currentAccount = CurrentWallet.GetAccount(account);
 
             if (currentAccount == null)
             {
-                ConsoleHelper.Warning("This address isn't in your wallet!");
+                Console.WriteLine("This address isn't in your wallet!");
                 return;
             }
             else
             {
                 if (currentAccount.Lock || currentAccount.WatchOnly)
                 {
-                    ConsoleHelper.Warning("Locked or WatchOnly address.");
+                    Console.WriteLine("Locked or WatchOnly address.");
                     return;
                 }
             }
@@ -103,7 +104,12 @@ namespace Neo.CLI
         [ConsoleCommand("vote", Category = "Vote Commands")]
         private void OnVoteCommand(UInt160 senderAccount, ECPoint publicKey)
         {
-            if (NoWallet()) return;
+            if (NoWallet())
+            {
+                Console.WriteLine("Need open wallet!");
+                return;
+            }
+
             byte[] script;
             using (ScriptBuilder scriptBuilder = new ScriptBuilder())
             {
@@ -121,7 +127,12 @@ namespace Neo.CLI
         [ConsoleCommand("unvote", Category = "Vote Commands")]
         private void OnUnvoteCommand(UInt160 senderAccount)
         {
-            if (NoWallet()) return;
+            if (NoWallet())
+            {
+                Console.WriteLine("Need open wallet!");
+                return;
+            }
+
             byte[] script;
             using (ScriptBuilder scriptBuilder = new ScriptBuilder())
             {
@@ -145,7 +156,7 @@ namespace Neo.CLI
             if (resJArray.Count > 0)
             {
                 Console.WriteLine();
-                ConsoleHelper.Info("Candidates:");
+                Console.WriteLine("Candidates:");
 
                 foreach (var item in resJArray)
                 {
@@ -170,7 +181,7 @@ namespace Neo.CLI
             if (resJArray.Count > 0)
             {
                 Console.WriteLine();
-                ConsoleHelper.Info("Committee:");
+                Console.WriteLine("Committee:");
 
                 foreach (var item in resJArray)
                 {
@@ -192,7 +203,7 @@ namespace Neo.CLI
             if (resJArray.Count > 0)
             {
                 Console.WriteLine();
-                ConsoleHelper.Info("Next validators:");
+                Console.WriteLine("Next validators:");
 
                 foreach (var item in resJArray)
                 {
@@ -207,7 +218,7 @@ namespace Neo.CLI
         [ConsoleCommand("get accountstate", Category = "Vote Commands")]
         private void OnGetAccountState(UInt160 address)
         {
-            string notice = "No vote record!";
+            string notice = "Notice: No vote record!";
             var arg = new JObject();
             arg["type"] = "Hash160";
             arg["value"] = address.ToString();
@@ -216,7 +227,7 @@ namespace Neo.CLI
             Console.WriteLine();
             if (result.IsNull)
             {
-                ConsoleHelper.Warning(notice);
+                Console.WriteLine(notice);
                 return;
             }
             var resJArray = (VM.Types.Array)result;
@@ -224,14 +235,14 @@ namespace Neo.CLI
             {
                 if (value.IsNull)
                 {
-                    ConsoleHelper.Warning(notice);
+                    Console.WriteLine(notice);
                     return;
                 }
             }
             var publickey = ECPoint.Parse(((ByteString)resJArray?[2])?.GetSpan().ToHexString(), ECCurve.Secp256r1);
-            ConsoleHelper.Info("Voted: ", Contract.CreateSignatureRedeemScript(publickey).ToScriptHash().ToAddress(NeoSystem.Settings.AddressVersion));
-            ConsoleHelper.Info("Amount: ", new BigDecimal(((Integer)resJArray?[0]).GetInteger(), NativeContract.NEO.Decimals).ToString());
-            ConsoleHelper.Info("Block: ", ((Integer)resJArray?[1]).GetInteger().ToString());
+            Console.WriteLine("Voted: " + Contract.CreateSignatureRedeemScript(publickey).ToScriptHash().ToAddress(NeoSystem.Settings.AddressVersion));
+            Console.WriteLine("Amount: " + new BigDecimal(((Integer)resJArray?[0]).GetInteger(), NativeContract.NEO.Decimals));
+            Console.WriteLine("Block: " + ((Integer)resJArray?[1]).GetInteger());
         }
     }
 }
