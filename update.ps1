@@ -23,10 +23,6 @@ foreach ($kvp in $projects.GetEnumerator()) {
     git subtree pull --prefix $prj "official-$prj" $commit --squash
 }
 
-# since NEON is moved to a different branch, need to handle it special
-write-host devpack-msil -ForegroundColor Cyan;
-git subtree pull --prefix devpack-msil official-devpack msil --squash 
-
 if ($merge) {
     write-host "Merging $branch into monorepo-$branch" -ForegroundColor Cyan; 
     git push
