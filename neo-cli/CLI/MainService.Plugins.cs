@@ -1,13 +1,3 @@
-// Copyright (C) 2016-2021 The Neo Project.
-// 
-// The neo-cli is free software distributed under the MIT software 
-// license, see the accompanying file LICENSE in the main directory of
-// the project or http://www.opensource.org/licenses/mit-license.php 
-// for more details.
-// 
-// Redistribution and use in source and binary forms with or without
-// modifications are permitted.
-
 using Neo.ConsoleService;
 using Neo.IO.Json;
 using Neo.Plugins;
@@ -64,11 +54,11 @@ namespace Neo.CLI
                 try
                 {
                     zip.ExtractToDirectory(".");
-                    ConsoleHelper.Info("Install successful, please restart neo-cli.");
+                    Console.WriteLine($"Install successful, please restart neo-cli.");
                 }
                 catch (IOException)
                 {
-                    ConsoleHelper.Warning($"Plugin already exist.");
+                    Console.WriteLine($"Plugin already exist.");
                 }
             }
         }
@@ -83,12 +73,12 @@ namespace Neo.CLI
             var plugin = Plugin.Plugins.FirstOrDefault(p => p.Name == pluginName);
             if (plugin is null)
             {
-                ConsoleHelper.Warning("Plugin not found");
+                Console.WriteLine("Plugin not found");
                 return;
             }
             if (plugin is Logger)
             {
-                ConsoleHelper.Warning("You cannot uninstall a built-in plugin.");
+                Console.WriteLine("You cannot uninstall a built-in plugin.");
                 return;
             }
 
@@ -101,7 +91,7 @@ namespace Neo.CLI
             catch (IOException)
             {
             }
-            ConsoleHelper.Info("Uninstall successful, please restart neo-cli.");
+            Console.WriteLine($"Uninstall successful, please restart neo-cli.");
         }
 
         /// <summary>
@@ -116,12 +106,12 @@ namespace Neo.CLI
                 foreach (Plugin plugin in Plugin.Plugins)
                 {
                     if (plugin is Logger) continue;
-                    ConsoleHelper.Info($"\t{plugin.Name,-20}", plugin.Description);
+                    Console.WriteLine($"\t{plugin.Name,-20}{plugin.Description}");
                 }
             }
             else
             {
-                ConsoleHelper.Warning("No loaded plugins");
+                Console.WriteLine("No loaded plugins");
             }
         }
     }

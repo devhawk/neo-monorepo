@@ -1,13 +1,3 @@
-// Copyright (C) 2016-2021 The Neo Project.
-// 
-// The neo-cli is free software distributed under the MIT software 
-// license, see the accompanying file LICENSE in the main directory of
-// the project or http://www.opensource.org/licenses/mit-license.php 
-// for more details.
-// 
-// Redistribution and use in source and binary forms with or without
-// modifications are permitted.
-
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Network.P2P;
@@ -35,10 +25,10 @@ namespace Neo.CLI
                 NeoSystem.MemPool.GetVerifiedAndUnverifiedTransactions(
                     out IEnumerable<Transaction> verifiedTransactions,
                     out IEnumerable<Transaction> unverifiedTransactions);
-                ConsoleHelper.Info("Verified Transactions:");
+                Console.WriteLine("Verified Transactions:");
                 foreach (Transaction tx in verifiedTransactions)
                     Console.WriteLine($" {tx.Hash} {tx.GetType().Name} {tx.NetworkFee} GAS_NetFee");
-                ConsoleHelper.Info("Unverified Transactions:");
+                Console.WriteLine("Unverified Transactions:");
                 foreach (Transaction tx in unverifiedTransactions)
                     Console.WriteLine($" {tx.Hash} {tx.GetType().Name} {tx.NetworkFee} GAS_NetFee");
 
@@ -86,14 +76,8 @@ namespace Neo.CLI
                     int linesWritten = 1;
                     foreach (RemoteNode node in LocalNode.GetRemoteNodes().OrderByDescending(u => u.LastBlockIndex).Take(Console.WindowHeight - 2).ToArray())
                     {
-                        ConsoleHelper.Info("  ip: ",
-                            $"{ node.Remote.Address,-15}\t",
-                            "port: ",
-                            $"{node.Remote.Port,-5}\t",
-                            "listen: ",
-                            $"{node.ListenerTcpPort,-5}\t",
-                            "height: ",
-                            $"{node.LastBlockIndex,-7}");
+                        Console.WriteLine(
+                            $"  ip: {node.Remote.Address,-15}\tport: {node.Remote.Port,-5}\tlisten: {node.ListenerTcpPort,-5}\theight: {node.LastBlockIndex,-7}");
                         linesWritten++;
                     }
 
