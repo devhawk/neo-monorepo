@@ -7,11 +7,11 @@ if ($currentBranch -ne $branch) {
 }
 
 $projects = @{
-    vm = "v3.0.1"
-    core = "v3.0.3";
-    devpack = "v3.0.3";
-    modules = "v3.0.3";
-    node = "v3.0.3";
+    vm = "v3.1.0"
+    core = "v3.1.0";
+    devpack = "v3.1.0";
+    modules = "v3.1.0";
+    node = "v3.1.0";
 }
 
 git fetch --all
