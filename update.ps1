@@ -1,4 +1,4 @@
-param([string]$branch = "rel-303", [switch]$merge)
+param([string]$branch = "rel-310", [switch]$merge)
 
 $currentBranch = git symbolic-ref -q --short HEAD 2> $null
 
