@@ -2,7 +2,7 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <VersionPrefix>3.2.1</VersionPrefix>
+    <VersionPrefix>3.3.0</VersionPrefix>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Neo.Plugins</RootNamespace>
     <Authors>The Neo Project</Authors>
@@ -12,6 +12,13 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/neo-project/neo-modules.git</RepositoryUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="config.json" Condition="Exists('config.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\src\neo\neo.csproj" />
