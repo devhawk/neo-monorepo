@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\vm\src\neo-vm\neo-vm.csproj" />
+    <ProjectReference Include="..\..\..\vm\src\Neo.VM\Neo.VM.csproj" />
   </ItemGroup>
 
 </Project>
