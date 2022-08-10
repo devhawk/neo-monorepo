@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,11 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -21,6 +17,10 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers.NEP_11
@@ -192,7 +192,7 @@ namespace Neo.Plugins.Trackers.NEP_11
 
 
         [RpcMethod]
-        public JObject GetNep11Transfers(JArray _params)
+        public JToken GetNep11Transfers(JArray _params)
         {
             if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
@@ -215,7 +215,7 @@ namespace Neo.Plugins.Trackers.NEP_11
         }
 
         [RpcMethod]
-        public JObject GetNep11Balances(JArray _params)
+        public JToken GetNep11Balances(JArray _params)
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
@@ -224,18 +224,18 @@ namespace Neo.Plugins.Trackers.NEP_11
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             json["balance"] = balances;
 
-            var map = new Dictionary<UInt160, List<(string tokenid, string amount, uint height)>>();
+            var map = new Dictionary<UInt160, List<(string tokenid, BigInteger amount, uint height)>>();
             int count = 0;
             byte[] prefix = Key(Nep11BalancePrefix, userScriptHash);
             foreach (var (key, value) in _db.FindPrefix<Nep11BalanceKey, TokenBalance>(prefix))
             {
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)
                     continue;
-                if (!map.ContainsKey(key.AssetScriptHash))
+                if (!map.TryGetValue(key.AssetScriptHash, out var list))
                 {
-                    map[key.AssetScriptHash] = new List<(string, string, uint)>();
+                    map[key.AssetScriptHash] = list = new List<(string, BigInteger, uint)>();
                 }
-                map[key.AssetScriptHash].Add((key.Token.GetSpan().ToHexString(), value.Balance.ToString(), value.LastUpdatedBlock));
+                list.Add((key.Token.GetSpan().ToHexString(), value.Balance, value.LastUpdatedBlock));
                 count++;
                 if (count >= _maxResults)
                 {
@@ -244,22 +244,38 @@ namespace Neo.Plugins.Trackers.NEP_11
             }
             foreach (var key in map.Keys)
             {
-                balances.Add(new JObject
+                try
                 {
-                    ["assethash"] = key.ToString(),
-                    ["tokens"] = new JArray(map[key].Select(v => new JObject
+                    using var script = new ScriptBuilder();
+                    script.EmitDynamicCall(key, "decimals");
+                    script.EmitDynamicCall(key, "symbol");
+
+                    var engine = ApplicationEngine.Run(script.ToArray(), _neoSystem.StoreView, settings: _neoSystem.Settings);
+                    var symbol = engine.ResultStack.Pop().GetString();
+                    var decimals = engine.ResultStack.Pop().GetInteger();
+                    var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key).Manifest.Name;
+
+                    balances.Add(new JObject
                     {
-                        ["tokenid"] = v.tokenid,
-                        ["amount"] = v.amount,
-                        ["lastupdatedblock"] = v.height
-                    })),
-                });
+                        ["assethash"] = key.ToString(),
+                        ["name"] = name,
+                        ["symbol"] = symbol,
+                        ["decimals"] = decimals.ToString(),
+                        ["tokens"] = new JArray(map[key].Select(v => new JObject
+                        {
+                            ["tokenid"] = v.tokenid,
+                            ["amount"] = v.amount.ToString(),
+                            ["lastupdatedblock"] = v.height
+                        })),
+                    });
+                }
+                catch { }
             }
             return json;
         }
 
         [RpcMethod]
-        public JObject GetNep11Properties(JArray _params)
+        public JToken GetNep11Properties(JArray _params)
         {
             UInt160 nep11Hash = GetScriptHashFromParam(_params[0].AsString());
             var tokenId = _params[1].AsString().HexToBytes();

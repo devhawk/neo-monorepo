@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,11 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -21,6 +17,10 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers.NEP_17
@@ -141,7 +141,7 @@ namespace Neo.Plugins.Trackers.NEP_17
 
 
         [RpcMethod]
-        public JObject GetNep17Transfers(JArray _params)
+        public JToken GetNep17Transfers(JArray _params)
         {
             if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
@@ -164,7 +164,7 @@ namespace Neo.Plugins.Trackers.NEP_17
         }
 
         [RpcMethod]
-        public JObject GetNep17Balances(JArray _params)
+        public JToken GetNep17Balances(JArray _params)
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
@@ -180,17 +180,33 @@ namespace Neo.Plugins.Trackers.NEP_17
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)
                     continue;
 
-                balances.Add(new JObject
+                try
                 {
-                    ["assethash"] = key.AssetScriptHash.ToString(),
-                    ["amount"] = value.Balance.ToString(),
-                    ["lastupdatedblock"] = value.LastUpdatedBlock
-                });
-                count++;
-                if (count >= _maxResults)
-                {
-                    break;
+                    using var script = new ScriptBuilder();
+                    script.EmitDynamicCall(key.AssetScriptHash, "decimals");
+                    script.EmitDynamicCall(key.AssetScriptHash, "symbol");
+
+                    var engine = ApplicationEngine.Run(script.ToArray(), _neoSystem.StoreView, settings: _neoSystem.Settings);
+                    var symbol = engine.ResultStack.Pop().GetString();
+                    var decimals = engine.ResultStack.Pop().GetInteger();
+                    var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash).Manifest.Name;
+
+                    balances.Add(new JObject
+                    {
+                        ["assethash"] = key.AssetScriptHash.ToString(),
+                        ["name"] = name,
+                        ["symbol"] = symbol,
+                        ["decimals"] = decimals.ToString(),
+                        ["amount"] = value.Balance.ToString(),
+                        ["lastupdatedblock"] = value.LastUpdatedBlock
+                    });
+                    count++;
+                    if (count >= _maxResults)
+                    {
+                        break;
+                    }
                 }
+                catch { }
             }
             return json;
         }

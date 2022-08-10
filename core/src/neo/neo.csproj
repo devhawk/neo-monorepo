@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Neo.Json\Neo.Json.csproj" />
     <ProjectReference Include="..\..\..\vm\src\Neo.VM\Neo.VM.csproj" />
   </ItemGroup>
 
