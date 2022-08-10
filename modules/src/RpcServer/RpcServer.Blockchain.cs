@@ -9,10 +9,12 @@
 // modifications are permitted.
 
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.VM;
+using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,15 +24,15 @@ namespace Neo.Plugins
     partial class RpcServer
     {
         [RpcMethod]
-        protected virtual JObject GetBestBlockHash(JArray _params)
+        protected virtual JToken GetBestBlockHash(JArray _params)
         {
             return NativeContract.Ledger.CurrentHash(system.StoreView).ToString();
         }
 
         [RpcMethod]
-        protected virtual JObject GetBlock(JArray _params)
+        protected virtual JToken GetBlock(JArray _params)
         {
-            JObject key = _params[0];
+            JToken key = _params[0];
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
             using var snapshot = system.GetSnapshot();
             Block block;
@@ -59,19 +61,19 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetBlockHeaderCount(JArray _params)
+        protected virtual JToken GetBlockHeaderCount(JArray _params)
         {
             return (system.HeaderCache.Last?.Index ?? NativeContract.Ledger.CurrentIndex(system.StoreView)) + 1;
         }
 
         [RpcMethod]
-        protected virtual JObject GetBlockCount(JArray _params)
+        protected virtual JToken GetBlockCount(JArray _params)
         {
             return NativeContract.Ledger.CurrentIndex(system.StoreView) + 1;
         }
 
         [RpcMethod]
-        protected virtual JObject GetBlockHash(JArray _params)
+        protected virtual JToken GetBlockHash(JArray _params)
         {
             uint height = uint.Parse(_params[0].AsString());
             var snapshot = system.StoreView;
@@ -83,9 +85,9 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetBlockHeader(JArray _params)
+        protected virtual JToken GetBlockHeader(JArray _params)
         {
-            JObject key = _params[0];
+            JToken key = _params[0];
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
             var snapshot = system.StoreView;
             Header header;
@@ -116,7 +118,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetContractState(JArray _params)
+        protected virtual JToken GetContractState(JArray _params)
         {
             UInt160 script_hash = ToScriptHash(_params[0].AsString());
             ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
@@ -135,24 +137,24 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetRawMemPool(JArray _params)
+        protected virtual JToken GetRawMemPool(JArray _params)
         {
             bool shouldGetUnverified = _params.Count >= 1 && _params[0].AsBoolean();
             if (!shouldGetUnverified)
-                return new JArray(system.MemPool.GetVerifiedTransactions().Select(p => (JObject)p.Hash.ToString()));
+                return new JArray(system.MemPool.GetVerifiedTransactions().Select(p => (JToken)p.Hash.ToString()));
 
             JObject json = new();
             json["height"] = NativeContract.Ledger.CurrentIndex(system.StoreView);
             system.MemPool.GetVerifiedAndUnverifiedTransactions(
                 out IEnumerable<Transaction> verifiedTransactions,
                 out IEnumerable<Transaction> unverifiedTransactions);
-            json["verified"] = new JArray(verifiedTransactions.Select(p => (JObject)p.Hash.ToString()));
-            json["unverified"] = new JArray(unverifiedTransactions.Select(p => (JObject)p.Hash.ToString()));
+            json["verified"] = new JArray(verifiedTransactions.Select(p => (JToken)p.Hash.ToString()));
+            json["unverified"] = new JArray(unverifiedTransactions.Select(p => (JToken)p.Hash.ToString()));
             return json;
         }
 
         [RpcMethod]
-        protected virtual JObject GetRawTransaction(JArray _params)
+        protected virtual JToken GetRawTransaction(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
@@ -175,7 +177,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetStorage(JArray _params)
+        protected virtual JToken GetStorage(JArray _params)
         {
             using var snapshot = system.GetSnapshot();
             if (!int.TryParse(_params[0].AsString(), out int id))
@@ -196,7 +198,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetTransactionHeight(JArray _params)
+        protected virtual JToken GetTransactionHeight(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             uint? height = NativeContract.Ledger.GetTransactionState(system.StoreView, hash)?.BlockIndex;
@@ -205,7 +207,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetNextBlockValidators(JArray _params)
+        protected virtual JToken GetNextBlockValidators(JArray _params)
         {
             using var snapshot = system.GetSnapshot();
             var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
@@ -219,13 +221,55 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetCommittee(JArray _params)
+        protected virtual JToken GetCandidates(JArray _params)
         {
-            return new JArray(NativeContract.NEO.GetCommittee(system.StoreView).Select(p => (JObject)p.ToString()));
+            using var snapshot = system.GetSnapshot();
+            byte[] script;
+            using (ScriptBuilder sb = new())
+            {
+                script = sb.EmitDynamicCall(NativeContract.NEO.Hash, "getCandidates", null).ToArray();
+            }
+            using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
+            JObject json = new();
+            try
+            {
+                var resultstack = engine.ResultStack.ToArray();
+                if (resultstack.Length > 0)
+                {
+                    JArray jArray = new();
+                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
+
+                    foreach (var item in resultstack)
+                    {
+                        var value = (VM.Types.Array)item;
+                        foreach (Struct ele in value)
+                        {
+                            var publickey = ele[0].GetSpan().ToHexString();
+                            json["publickey"] = publickey;
+                            json["votes"] = ele[1].GetInteger().ToString();
+                            json["active"] = validators.ToByteArray().ToHexString().Contains(publickey);
+                            jArray.Add(json);
+                            json = new();
+                        }
+                        return jArray;
+                    }
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                json["exception"] = "Invalid result.";
+            }
+            return json;
         }
 
         [RpcMethod]
-        protected virtual JObject GetNativeContracts(JArray _params)
+        protected virtual JToken GetCommittee(JArray _params)
+        {
+            return new JArray(NativeContract.NEO.GetCommittee(system.StoreView).Select(p => (JToken)p.ToString()));
+        }
+
+        [RpcMethod]
+        protected virtual JToken GetNativeContracts(JArray _params)
         {
             return new JArray(NativeContract.Contracts.Select(p => p.NativeContractToJson(system.Settings)));
         }
