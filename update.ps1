@@ -1,4 +1,4 @@
-param([string]$branch = "rel-331", [switch]$merge)
+param([string]$branch = "rel-340", [switch]$merge)
 
 $currentBranch = git symbolic-ref -q --short HEAD 2> $null
 
@@ -7,11 +7,11 @@ if ($currentBranch -ne $branch) {
 }
 
 $projects = @{
-    vm = "v3.3.1"
-    core = "v3.3.1";
-    devpack = "v3.3.0";
-    modules = "v3.3.1";
-    node = "v3.3.1";
+    vm = "v3.4.0"
+    core = "v3.4.0";
+    devpack = "v3.4.0";
+    modules = "v3.4.0";
+    node = "v3.4.0";
 }
 
 git fetch --all
