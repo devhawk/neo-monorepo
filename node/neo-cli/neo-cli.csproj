@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neo.ConsoleService\Neo.ConsoleService.csproj" />
-    <ProjectReference Include="..\..\core\src\neo\neo.csproj" />
+    <ProjectReference Include="..\..\core\src\Neo\Neo.csproj" />
   </ItemGroup>
 
 </Project>
