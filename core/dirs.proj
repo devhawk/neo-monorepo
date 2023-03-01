@@ -1,0 +1,10 @@
+<!-- https://github.com/microsoft/MSBuildSdks/tree/main/src/Traversal -->
+<Project Sdk="Microsoft.Build.Traversal/3.2.0">
+  <ItemGroup>
+    <ProjectReference Include="benchmarks\Neo.Benchmarks\Neo.Benchmarks.csproj" />
+    <ProjectReference Include="src\Neo.Json\Neo.Json.csproj" />
+    <ProjectReference Include="src\Neo\Neo.csproj" />
+    <ProjectReference Include="tests\Neo.Json.UnitTests\Neo.Json.UnitTests.csproj" />
+    <ProjectReference Include="tests\Neo.UnitTests\Neo.UnitTests.csproj" />
+  </ItemGroup>
+</Project>

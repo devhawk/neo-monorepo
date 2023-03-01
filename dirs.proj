@@ -1,0 +1,42 @@
+<!-- https://github.com/microsoft/MSBuildSdks/tree/main/src/Traversal -->
+<Project Sdk="Microsoft.Build.Traversal/3.2.0">
+  <ItemGroup>
+    <ProjectReference Include="core\dirs.proj" />
+    <ProjectReference Include="devpack\dirs.proj" />
+    <ProjectReference Include="modules\dirs.proj" />
+    <ProjectReference Include="node\dirs.proj" />
+    <ProjectReference Include="vm\dirs.proj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <BuildInParallel>false</BuildInParallel>
+    <PackInParallel>false</PackInParallel>
+    <TraversalGlobalProperties>PackageOutputPath=$(MSBuildThisFileDirectory)\artifacts</TraversalGlobalProperties>
+  </PropertyGroup>
+
+  <Target Name="GetGitInfo" BeforeTargets="Pack">
+    <Exec Command='git symbolic-ref -q --short HEAD' EchoOff='true' ContinueOnError='true' ConsoleToMSBuild='true' StandardErrorImportance='high' StandardOutputImportance='low'>
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitBranch"/>
+      <Output TaskParameter="ExitCode" PropertyName="MSBuildLastExitCode" />
+    </Exec>
+    <Exec Command='git rev-list --count HEAD' EchoOff='true' ContinueOnError='true' ConsoleToMSBuild='true' StandardErrorImportance='high' StandardOutputImportance='low'>
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitRevListCount"/>
+      <Output TaskParameter="ExitCode" PropertyName="MSBuildLastExitCode" />
+    </Exec>
+
+    <PropertyGroup Condition="$(_GitBranch.StartsWith('monorepo-'))">
+      <_GitBranch>mono-$(_GitBranch.substring(9))</_GitBranch>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <RevCount>$([System.Int32]::Parse($(_GitRevListCount)).ToString('d5'))</RevCount>
+      <Suffix>$(_GitBranch)-$(RevCount)</Suffix>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Update="@(ProjectReference)" AdditionalProperties="%(AdditionalProperties);VersionSuffix=$(Suffix)" />
+    </ItemGroup>
+
+    <Message Text="git info $(Suffix)" Importance="high" />
+  </Target>
+</Project>
