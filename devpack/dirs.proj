@@ -1,0 +1,9 @@
+<!-- https://github.com/microsoft/MSBuildSdks/tree/main/src/Traversal -->
+<Project Sdk="Microsoft.Build.Traversal/3.2.0">
+  <ItemGroup>
+    <ProjectReference Include="src\Neo.Compiler.CSharp\Neo.Compiler.CSharp.csproj" />
+    <ProjectReference Include="src\Neo.SmartContract.Framework\Neo.SmartContract.Framework.csproj" />
+    <ProjectReference Include="tests\Neo.Compiler.CSharp.UnitTests\Neo.Compiler.CSharp.UnitTests.csproj" />
+    <ProjectReference Include="tests\Neo.SmartContract.Framework.UnitTests\Neo.SmartContract.Framework.UnitTests.csproj" />
+  </ItemGroup>
+</Project>

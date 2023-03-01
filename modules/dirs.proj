@@ -1,0 +1,22 @@
+<!-- https://github.com/microsoft/MSBuildSdks/tree/main/src/Traversal -->
+<Project Sdk="Microsoft.Build.Traversal/3.2.0">
+  <ItemGroup>
+    <ProjectReference Include="src\ApplicationLogs\ApplicationLogs.csproj" />
+    <ProjectReference Include="src\DBFTPlugin\DBFTPlugin.csproj" />
+    <ProjectReference Include="src\LevelDBStore\LevelDBStore.csproj" />
+    <ProjectReference Include="src\MPTTrie\MPTTrie.csproj" />
+    <ProjectReference Include="src\OracleService\OracleService.csproj" />
+    <ProjectReference Include="src\RocksDBStore\RocksDBStore.csproj" />
+    <ProjectReference Include="src\RpcClient\RpcClient.csproj" />
+    <ProjectReference Include="src\RpcServer\RpcServer.csproj" />
+    <ProjectReference Include="src\SQLiteWallet\SQLiteWallet.csproj" />
+    <ProjectReference Include="src\StatesDumper\StatesDumper.csproj" />
+    <ProjectReference Include="src\StateService\StateService.csproj" />
+    <ProjectReference Include="src\TokensTracker\TokensTracker.csproj" />
+    <ProjectReference Include="tests\Neo.Cryptography.MPTTrie.Tests\Neo.Cryptography.MPTTrie.Tests.csproj" />
+    <ProjectReference Include="tests\Neo.Network.RPC.Tests\Neo.Network.RPC.Tests.csproj" />
+    <ProjectReference Include="tests\Neo.Plugins.OracleService.Tests\Neo.Plugins.OracleService.Tests.csproj" />
+    <ProjectReference Include="tests\Neo.Plugins.RpcServer.Tests\Neo.Plugins.RpcServer.Tests.csproj" />
+    <ProjectReference Include="tests\Neo.Plugins.Storage.Tests\Neo.Plugins.Storage.Tests.csproj" />
+  </ItemGroup>
+</Project>

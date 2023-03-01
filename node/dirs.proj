@@ -1,0 +1,9 @@
+<!-- https://github.com/microsoft/MSBuildSdks/tree/main/src/Traversal -->
+<Project Sdk="Microsoft.Build.Traversal/3.2.0">
+  <ItemGroup>
+    <ProjectReference Include="neo-cli\neo-cli.csproj" />
+    <ProjectReference Include="neo-gui\neo-gui.csproj" />
+    <ProjectReference Include="Neo.ConsoleService\Neo.ConsoleService.csproj" />
+    <ProjectReference Include="tests\Neo.ConsoleService.Tests\Neo.ConsoleService.Tests.csproj" />
+  </ItemGroup>
+</Project>
